@@ -3,11 +3,20 @@ import { BlobStateStore } from '../src/storage/index.js';
 import { HashSchema } from '../src/domain/schema.js';
 import { createPublicClient,http } from 'viem';
 import { baseSepolia } from 'viem/chains';
+import { createViemRefundChain } from '../src/workflow/refund-chain.js';
 import { refundTransferCall } from '../src/refunds/authorization.js';
 import type { SignedRefundAuthorization } from '../src/refunds/types.js';
 async function main(){
  const id=HashSchema.parse(process.argv[2]),env=await loadPrivateEnvironment();
  const state=await new BlobStateStore({token:env.BLOB_READ_WRITE_TOKEN}).get<{status:string;errorCode:string|null;transactionHashes:string[];authorization:SignedRefundAuthorization|null}>('refunds/'+id+'.json');
+ const chain=createViemRefundChain({privateKey:env.SELLER_PRIVATE_KEY as `0x${string}`,rpcUrl:env.BASE_RPC_URL,fromBlock:0n});
+ try{
+  const observation=await chain.observation();
+  console.log(JSON.stringify({observation:{...observation,headBlockNumber:observation.headBlockNumber.toString()}}));
+ }catch(error){
+  const e=error as {name?:string;shortMessage?:string};
+  console.log(JSON.stringify({observation:'failed',type:e.name,reason:e.shortMessage?.slice(0,500)}));
+ }
  if(!state){console.log('No refund state');return;}
  const s=state.value;
  console.log(JSON.stringify({caseId:id,status:s.status,errorCode:s.errorCode,transactionHashes:s.transactionHashes,authorizationPrepared:!!s.authorization,validBefore:s.authorization?.validBefore}));

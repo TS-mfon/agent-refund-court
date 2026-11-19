@@ -12,7 +12,9 @@ async function main(){
  const response=await fetch(origin.origin+'/api/v1/cases/'+id,{signal:AbortSignal.timeout(20000)});
  if(!response.ok)throw new Error('Case fetch failed');
  const body=await response.text();if(Buffer.byteLength(body)>65536)throw new Error('Case too large');
- const caseFile=CaseManifestSchema.parse(JSON.parse(body).case);verifiedCase(caseFile);
+ const caseFile=CaseManifestSchema.parse(JSON.parse(body).case);
+ if(args.includes('--probe')){console.log(JSON.stringify({caseId:caseFile.id,status:caseFile.status,refund:caseFile.refund?.status,refundVerified:caseFile.refund?.verified}));return;}
+ verifiedCase(caseFile);
  if(caseFile.id.toLowerCase()!==id.toLowerCase())throw new Error('Case identity mismatch');
  const dir=resolve('public/captures');await mkdir(dir,{recursive:true});
  await cp('../public/logos','public/logos',{recursive:true});
