@@ -20,7 +20,7 @@ async function main(){
  await cp('../public/logos','public/logos',{recursive:true});
  const browser=await chromium.launch({headless:true});
  try{
-  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:1});
+  const page=await browser.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:2});
   await page.goto(origin.origin+'/?case='+id,{waitUntil:'networkidle',timeout:45000});
   await page.getByText('Refund confirmed',{exact:true}).first().waitFor();
   await page.screenshot({path:join(dir,'overview.png')});

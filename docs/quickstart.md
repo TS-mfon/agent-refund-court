@@ -18,7 +18,7 @@ Check `services`, `priceBaseUnits`, `network`, `seller`, `receiptSigner`, `court
 Use Node.js 24 or newer:
 
 ```sh
-git clone https://github.com/TS-mfon/agent-refund-court.git
+git clone --branch feat/working-demo https://github.com/TS-mfon/agent-refund-court.git
 cd agent-refund-court
 npm ci
 ```

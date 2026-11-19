@@ -1,5 +1,5 @@
 import type {CSSProperties,ReactNode} from 'react';
-import {AbsoluteFill,CanvasImage,Easing,Sequence,interpolate,staticFile,useCurrentFrame,useVideoConfig} from 'remotion';
+import {AbsoluteFill,CanvasImage,Img,Easing,Sequence,interpolate,staticFile,useCurrentFrame,useVideoConfig} from 'remotion';
 import type {CaseManifest} from '../../src/domain/schema';
 import {shortHash as short,sceneText} from './copy.mjs';
 export type VideoProps={caseFile:CaseManifest|null;origin:string;capturedAt:string;assets:{overview:string;delivery:string;receipts:string}};
@@ -9,11 +9,11 @@ const money=(n:string)=>{const v=BigInt(n),f=(v%1000000n).toString().padStart(6,
 const font={fontFamily:'Arial, sans-serif',color:ink};
 function Logos({large=false}:{large?:boolean}){
  return <div style={{display:'flex',alignItems:'center',gap:large?54:32}}>
-  <CanvasImage src={staticFile('logos/internet-court.svg')} style={{height:large?100:46,width:large?275:158,objectFit:'contain'}}/>
+  <Img src={staticFile('logos/internet-court.svg')} style={{height:large?100:46,width:large?275:158,objectFit:'contain'}}/>
   <span style={{fontSize:large?40:25,color:'#8ca0bb'}}>+</span>
-  <CanvasImage src={staticFile('logos/genlayer.svg')} style={{height:large?100:43,width:large?270:157,objectFit:'contain'}}/>
+  <Img src={staticFile('logos/genlayer.svg')} style={{height:large?100:43,width:large?270:157,objectFit:'contain'}}/>
   <span style={{fontSize:large?40:25,color:'#8ca0bb'}}>+</span>
-  <div style={{padding:large?'18px 35px':'9px 20px',background:blue,borderRadius:large?20:10}}><CanvasImage src={staticFile('logos/x402.svg')} style={{height:large?60:29,width:large?145:80,objectFit:'contain'}}/></div>
+  <div style={{padding:large?'18px 35px':'9px 20px',background:blue,borderRadius:large?20:10}}><Img src={staticFile('logos/x402.svg')} style={{height:large?60:29,width:large?145:80,objectFit:'contain'}}/></div>
  </div>;
 }
 function Motion({children,delay=0,style={}}:{children:ReactNode;delay?:number;style?:CSSProperties}){
@@ -34,15 +34,15 @@ function Hash({label,value}:{label:string;value:string}){
 }
 function Screen({src,height=500}:{src:string;height?:number}){
  const frame=useCurrentFrame();
- return <div style={{height,overflow:'hidden',borderRadius:22,border:'1px solid #cdd9ef',boxShadow:'0 18px 55px rgba(25,60,115,.10)',background:'#fff'}}>
-  <CanvasImage src={staticFile(src)} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'top',scale:interpolate(frame,[0,240],[1,1.035],clamp)}}/>
+ return <div style={{height,padding:20,overflow:'hidden',borderRadius:22,border:'1px solid #cdd9ef',boxShadow:'0 18px 55px rgba(25,60,115,.10)',background:'#fff'}}>
+  <CanvasImage src={staticFile(src)} style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'top',scale:interpolate(frame,[0,240],[1,1.02],clamp)}}/>
  </div>;
 }
 function Hook({c,assets}: {c:CaseManifest;assets:VideoProps['assets']}){
  const frame=useCurrentFrame();
  return <Scene caption="An agent bought work. The receipts show what happened next.">
   <div style={{display:'grid',gridTemplateColumns:'1fr 1.05fr',gap:70,alignItems:'center'}}>
-   <Motion delay={-16}><div style={{fontSize:28,color:blue,marginBottom:26}}>Agent Refund Court</div><h1 style={{fontSize:112,lineHeight:1.02,letterSpacing:-5,margin:0}}>Your agent paid.<br/>Did it get<br/>what it bought?</h1><p style={{fontSize:28,marginTop:30,color:muted}}>One purchase. One dispute. One verified return.</p></Motion>
+   <Motion delay={-16}><div style={{fontSize:28,color:blue,marginBottom:26}}>Agent Refund Court</div><h1 style={{fontSize:96,lineHeight:1.04,letterSpacing:-5,margin:0}}>Your agent paid.<br/>Did it get<br/>what it bought?</h1><p style={{fontSize:28,marginTop:30,color:muted}}>One purchase. One dispute. One verified return.</p></Motion>
    <Motion delay={8}><Screen src={assets.overview} height={570}/></Motion>
   </div>
   <div style={{position:'absolute',left:-120,top:-150,width:470,height:470,border:'42px solid '+pale,borderRadius:'50%',zIndex:-1,rotate:interpolate(frame,[0,120],['0deg','24deg'],clamp)}}/>
@@ -51,7 +51,7 @@ function Hook({c,assets}: {c:CaseManifest;assets:VideoProps['assets']}){
 function Purchase({c}:{c:CaseManifest}){
  return <Scene title="A small purchase. A clear promise." caption="The skill buys a launch plan through x402, against three agreed quality criteria.">
   <div style={{display:'grid',gridTemplateColumns:'1.06fr 1fr',gap:40}}>
-   <Motion><Panel style={{height:392,background:ink,color:'#fff'}}><div style={{fontSize:24,color:'#c4d8fa',marginBottom:22}}>Run the agent skill</div><pre style={{fontSize:32,lineHeight:1.5,margin:0,whiteSpace:'pre-wrap'}}>npm run demo --{ '\n'}  --origin https://{ '\n'}  agent-refund-court.vercel.app{ '\n'}  --scenario bad</pre><div style={{fontSize:25,color:'#b4cdf8',marginTop:34}}>{money(c.payment!.amount)} USDC · Base Sepolia</div></Panel></Motion>
+   <Motion><Panel style={{height:392,background:ink,color:'#fff'}}><div style={{fontSize:24,color:'#c4d8fa',marginBottom:22}}>Run the agent skill</div><pre style={{fontSize:26,lineHeight:1.55,margin:0,whiteSpace:'pre-wrap'}}>{"npm run demo -- \\\n  --origin https://agent-refund-court.vercel.app \\\n  --scenario bad"}</pre><div style={{fontSize:25,color:'#b4cdf8',marginTop:34}}>{money(c.payment!.amount)} USDC · Base Sepolia</div></Panel></Motion>
    <Motion delay={6}><Panel style={{height:392}}><h2 style={{fontSize:43,margin:'0 0 25px'}}>Five hours.<br/>No advertising budget.</h2><p style={{fontSize:29,lineHeight:1.45,margin:0}}>A solo builder needs three practical launch actions and a useful way to collect feedback.</p><div style={{fontSize:24,color:blue,marginTop:29}}>Relevance · Actionability · Grounding</div></Panel></Motion>
   </div>
  </Scene>;

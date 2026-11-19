@@ -1,0 +1,39 @@
+{
+  "sourceHashes": {
+    "src/index.tsx": "179c72f9f34055412851025bc5c042c8111ba561d36112e2e674b5ac1217370f",
+    "src/video.tsx": "12f1bf40476e91bab1986bb7ce5686c549ef669d2b1e7e3958e0bc105b1401a9",
+    "src/copy.mjs": "1ce2fba57aada6de7f06ec1bbe305509cee29de04a5d39ae517c0cc9ac31312c",
+    "evidence.mjs": "88dde68056829c842053ff897287958fd21c9671241b01c4168f5c792d3e6aa0",
+    "render.mjs": "9831f3a11b2d0f371388bab350b10904cb6ec3a99c9ece31b7ba20258c486d38",
+    "capture.ts": "bd1f9b52d9dab4cb03879ddc476d056bf7434404117092f3073f139fafe923d6"
+  },
+  "captureHashes": {
+    "overview": "4427ada59d698869ce83f7bff04f0acfc692290f7c1fc6912f3f98133227bab2",
+    "delivery": "fb841975f29119414e88d61f86aaa6cd04b1a703983010dd065ec2578f31d0be",
+    "receipts": "af22674ab9b41c041b703b3dde3e18b011fad90c36fbb92ebde3125780d6dc67"
+  },
+  "composition": "AgentRefundCourt",
+  "durationSeconds": 44,
+  "width": 1920,
+  "height": 1080,
+  "frames": 1320,
+  "fps": 30,
+  "audio": "Intentional silent captions; no generated footage or narration.",
+  "codec": "H.264",
+  "decoded": true,
+  "caseId": "0x4b3068cb77f1f4e2db7de1ccd08a335ed5d70855a475f9218e96bd023eef4bcc",
+  "origin": "https://agent-refund-court.vercel.app",
+  "sourceRevision": "8d9ba58e3c744e4ce3f7a01969b6c40248241852",
+  "captureTime": "2026-11-19T23:11:46.133Z",
+  "payment": "0x3e296839fb2ddb81505cb3210c85dc5b55678cd9856e2069c39ca5e3435009d4",
+  "court": "0xd61d1c5e96f197c29df9bc84661f438baa82952f75d15f5adda491c1d375d66a",
+  "refund": "0x0f9639338e0f94c7ea6736634b20b3904a4b8f67db75edeee7cf135edb000ea0",
+  "outputBytes": 3420613,
+  "sha256": "fa31cb1dc8ae9e7c2a51e64ca0fe5531980ae494313eda69ae11d94c86e2311d",
+  "concurrency": 1,
+  "renderCommand": "ARC_VIDEO_CONCURRENCY=1 LD_LIBRARY_PATH=/tmp/arc-chromium-libs/usr/lib/x86_64-linux-gnu npm run render -- --props case.json",
+  "aiAssistance": "AI-authored Remotion motion graphics, editing, and captions. Product imagery is browser capture.",
+  "remotionVersion": "4.0.545",
+  "seed": "Not applicable: deterministic frame-based composition.",
+  "createdAt": "2026-11-19T23:32:53.596Z"
+}

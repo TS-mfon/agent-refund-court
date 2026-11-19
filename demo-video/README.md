@@ -15,7 +15,7 @@ npm run capture -- --origin https://agent-refund-court.vercel.app --case 0xACTUA
 npm run render -- --props case.json
 ```
 
-Replace the case placeholder with a completed case from the public viewer. Capture uses the parent's Playwright browser. Rendering uses Remotion's bundled browser. Linux needs Chromium's native libraries; this development environment supplied ALSA from an isolated temporary directory through LD_LIBRARY_PATH.
+Replace the case placeholder with a completed case from the public viewer. Capture uses the parent's Playwright browser. Rendering uses Remotion's bundled browser. The worker count defaults to two; set ARC_VIDEO_CONCURRENCY to an integer from one to four to adjust resource use. The refreshed export used one worker. Linux needs Chromium's native libraries; this development environment supplied ALSA from an isolated temporary directory through LD_LIBRARY_PATH.
 
 The render saves QA stills to out/qa, the MP4 to out/agent-refund-court.mp4, and public copies to ../public/demo.mp4 and ../public/demo-poster.png. Previous public exports are replaced only after rendering succeeds. provenance.json records the actual receipts, captured source and artifact hash.
 

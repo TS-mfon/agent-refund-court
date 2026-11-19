@@ -1,0 +1,192 @@
+{
+  "caseFile": {
+    "schemaVersion": 1,
+    "id": "0x4b3068cb77f1f4e2db7de1ccd08a335ed5d70855a475f9218e96bd023eef4bcc",
+    "mode": "fixture",
+    "createdAt": "2026-11-19T03:56:04.339Z",
+    "updatedAt": "2026-11-19T07:44:00.378Z",
+    "status": "refunded",
+    "agreement": {
+      "schemaVersion": 1,
+      "orderId": "0xbc91ae36cc8b2bc9fbab27b987bc61cb926a442295f3770760e9b9f63c17212e",
+      "serviceId": "launch-plan-v1",
+      "origin": "https://agent-refund-court.vercel.app",
+      "resource": "https://agent-refund-court.vercel.app/api/v1/orders/0xbc91ae36cc8b2bc9fbab27b987bc61cb926a442295f3770760e9b9f63c17212e/delivery",
+      "buyer": "0x52003285023BFC1Ceac4de6ec9a55585200366b8",
+      "seller": "0xCa8d946a096cD8497C15865F8124007030Ea437d",
+      "receiptSigner": "0x1F0E75a4C64689A1e761011cC760030d70aaCB19",
+      "chainId": 84532,
+      "network": "eip155:84532",
+      "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "amount": "10000",
+      "brief": "TraceLite converts HTTP request logs into a searchable local timeline, helping backend developers investigate intermittent API failures. It runs locally. A solo builder has a working prototype but no customers. The builder has five hours and no advertising budget for its first week of promotion. Produce a short launch plan with three practical actions and a way to collect useful feedback. Do not invent customers, benchmarks, integrations, or product capabilities.",
+      "rubricId": "launch-plan-v1",
+      "rubric": [
+        {
+          "id": "relevance",
+          "text": "Materially use the product, intended audience, and available resources."
+        },
+        {
+          "id": "actionability",
+          "text": "Give practical things to create, show, or do, and a useful feedback method."
+        },
+        {
+          "id": "grounding",
+          "text": "Do not rely on invented capabilities, customers, results, or excluded resources."
+        }
+      ],
+      "refundPolicy": "Full paid principal for a material failure; preference and minor style differences do not qualify.",
+      "deliveryDeadlineSeconds": 1800,
+      "disputeWindowSeconds": 86400,
+      "createdAt": 1795060559,
+      "expiresAt": 1795061159,
+      "courtNetwork": "studionet",
+      "courtAddress": "0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6",
+      "publicEvidence": true
+    },
+    "delivery": {
+      "text": "Build awareness and stay consistent. Define your target audience and make sure your message is clear. Create engaging content across social platforms and show how TraceLite solves important problems. Build a community around your product and use feedback to improve your offering.\n\nPost regularly, engage with your audience, and focus on delivering value. Consider partnerships that can help expand your reach. Track your performance and optimize your approach based on what works. Keep your goals realistic and make the most of the resources you have.\n\nFor the first week, focus on visibility, engagement, and momentum. Ask people whether they like your product and what they think you should improve. Stay authentic, remain patient, and continue refining your strategy. A strong launch comes from consistency and a clear understanding of your users.",
+      "hash": "0x7d27bac0d9a82633170082f98c74cfd981d8c078eec65ad7f12c081c072ea090",
+      "committedAt": 1795060564
+    },
+    "buyerClaim": {
+      "action": "dispute",
+      "materialFailure": true,
+      "criterionIds": [
+        "actionability"
+      ],
+      "reason": "The plan provides generic advice instead of three specific, practical actions and a concrete feedback mechanism.",
+      "quotes": [
+        "Build awareness and stay consistent.",
+        "Post regularly, engage with your audience",
+        "Ask people whether they like your product"
+      ]
+    },
+    "sellerDefense": "The delivery provided a strategy for the first week, including specific instructions to post content, build community, and engage with audiences. A feedback mechanism was explicitly requested by advising the user to ask specific questions about product improvements. This constitutes a practical, actionable plan grounded in the constraints provided.",
+    "payment": {
+      "chainId": 84532,
+      "network": "eip155:84532",
+      "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "payer": "0x52003285023BFC1Ceac4de6ec9a55585200366b8",
+      "seller": "0xCa8d946a096cD8497C15865F8124007030Ea437d",
+      "amount": "10000",
+      "authorizationNonce": "0xe0ac1ddca518851937ab83470cdb38f7558c450db3bbaf8df9fc1a7860f8d21a",
+      "transactionHash": "0x3e296839fb2ddb81505cb3210c85dc5b55678cd9856e2069c39ca5e3435009d4",
+      "blockNumber": "60693473",
+      "blockHash": "0xb7eaad244d1e8e91a5382763babb0573a1a989d4ac3a3b4e60790af00a41781f",
+      "verified": true
+    },
+    "court": {
+      "network": "studionet",
+      "contractAddress": "0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6",
+      "caseId": "0x4b3068cb77f1f4e2db7de1ccd08a335ed5d70855a475f9218e96bd023eef4bcc",
+      "evidenceHash": "0xa2c08abab6184cab463d740af7140e6686d6dd8d88022dc06eab05de5ea300a0",
+      "transactionHash": "0xd61d1c5e96f197c29df9bc84661f438baa82952f75d15f5adda491c1d375d66a",
+      "status": "finalized",
+      "result": {
+        "decision": "REFUND",
+        "materialFailure": true,
+        "reasoning": "The answer materially fails the agreed purpose, not merely the requested formatting. It names TraceLite but does not use its local HTTP-log timeline, intermittent API-failure use case, or backend-developer audience to shape the promotion. It also does not translate the five-hour, no-advertising-budget constraint into a feasible first-week plan. Advice to create content, post regularly, build community, and consider partnerships supplies no concrete deliverables or sufficiently specific actions for this solo builder. Asking whether people like the product and what to improve offers only broad opinion gathering, without a practical method to obtain useful feedback on the actual use case. The seller's defense does not establish specificity absent from the original answer. No invented customers, results, or capabilities are evident, so grounding is not a supported failure.",
+        "failedCriteria": [
+          "relevance",
+          "actionability"
+        ]
+      },
+      "verified": true
+    },
+    "refund": {
+      "reason": "quality",
+      "status": "confirmed",
+      "authorizer": "0xCa8d946a096cD8497C15865F8124007030Ea437d",
+      "payer": "0x52003285023BFC1Ceac4de6ec9a55585200366b8",
+      "token": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+      "amount": "10000",
+      "authorizationNonce": "0x047208d47ee9c6e6a2f5233fbdda9d109160c348490c559248cf56e107aaa986",
+      "transactionHash": "0x0f9639338e0f94c7ea6736634b20b3904a4b8f67db75edeee7cf135edb000ea0",
+      "blockNumber": "60761787",
+      "blockHash": "0x89b323efa6a7c307867dca3fbe42ca19fff8eba4d28c2cb3e342fd09a1b2fe1e",
+      "verified": true
+    },
+    "evidenceHash": "0xa2c08abab6184cab463d740af7140e6686d6dd8d88022dc06eab05de5ea300a0",
+    "events": [
+      {
+        "id": "payment",
+        "kind": "payment",
+        "at": "2026-11-19T03:56:04.339Z",
+        "label": "USDC payment verified on Base Sepolia"
+      },
+      {
+        "id": "delivery",
+        "kind": "delivery",
+        "at": "2026-11-19T03:56:04.339Z",
+        "label": "Original answer committed and signed"
+      },
+      {
+        "id": "buyer-decision",
+        "kind": "dispute",
+        "at": "2026-11-19T03:56:07.270Z",
+        "label": "Buyer agent identified a material failure"
+      },
+      {
+        "id": "evidence-sealed",
+        "kind": "evidence",
+        "at": "2026-11-19T03:56:07.270Z",
+        "label": "Agreement, payment, answer and claim frozen for the court"
+      },
+      {
+        "id": "court-registration",
+        "kind": "court",
+        "at": "2026-11-19T03:56:10.189Z",
+        "label": "Original evidence submitted to Internet Court on GenLayer."
+      },
+      {
+        "id": "court-registered",
+        "kind": "court",
+        "at": "2026-11-19T03:56:49.462Z",
+        "label": "Evidence registration finalized; court may now adjudicate."
+      },
+      {
+        "id": "court-adjudication",
+        "kind": "court",
+        "at": "2026-11-19T03:57:00.409Z",
+        "label": "GenLayer validators are judging the agreed quality criteria."
+      },
+      {
+        "id": "court-finalized",
+        "kind": "court",
+        "at": "2026-11-19T03:58:03.119Z",
+        "label": "Independent ruling finalized: REFUND"
+      },
+      {
+        "id": "refund-CHAIN_RECONCILIATION_REQUIRED",
+        "kind": "court",
+        "at": "2026-11-19T03:58:17.698Z",
+        "label": "Refund: CHAIN_RECONCILIATION_REQUIRED"
+      },
+      {
+        "id": "refund-BROADCAST",
+        "kind": "court",
+        "at": "2026-11-19T07:43:46.154Z",
+        "label": "Refund: BROADCAST"
+      },
+      {
+        "id": "refund-REFUND_CONFIRMED",
+        "kind": "court",
+        "at": "2026-11-19T07:44:00.378Z",
+        "label": "Original paid principal returned; transfer confirmed."
+      }
+    ],
+    "provenance": {
+      "source": "live",
+      "fixtureLabel": "generic delivery fixture",
+      "disclosure": "The delivered answer is an explicitly selected fixture. Payment, buyer evaluation, court adjudication and any refund use real integrations."
+    }
+  },
+  "origin": "https://agent-refund-court.vercel.app",
+  "capturedAt": "2026-11-19T23:11:46.133Z",
+  "assets": {
+    "overview": "captures/overview.png",
+    "delivery": "captures/delivery.png",
+    "receipts": "captures/receipts.png"
+  }
+}
