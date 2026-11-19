@@ -3,11 +3,12 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { randomUUID } from 'node:crypto';
 import {
   AgreementSchema, AddressSchema, SignatureSchema, HashSchema, DeliverySchema, PaymentProofSchema,
-  SAMPLE_BRIEF, type CaseManifest, type Delivery, type PaymentProof,
+  SAMPLE_BRIEF, bounded, type CaseManifest, type Delivery, type PaymentProof,
 } from '../domain/schema.js';
 import { createAgreement, hashContent, recordTypedData, verifyRecord } from '../domain/identity.js';
 import { type Stored, StorageConflict, acquireLease, commitArtifact, type LeaseGrant } from '../storage/index.js';
-import { ApiError, type ServerOptions } from './types.js';
+import { authorizeBuyer } from './security.js';
+import { ApiError, type Principal, type ServerOptions } from './types.js';
 import { CaseRepository } from './cases.js';
 
 const LeaseSchema = z.object({ token: z.string(), owner: z.string(), generation: z.number().int(), expiresAt: z.number().int() }).strict();
@@ -22,7 +23,7 @@ export const OrderSchema = z.object({
   lease: LeaseSchema.nullable(), artifactKey: z.string().nullable(), status: z.string(),
 }).strict();
 export type Order = z.infer<typeof OrderSchema>;
-const QuoteInput = z.object({ buyer: AddressSchema, brief: z.string().min(1).max(1200).default(SAMPLE_BRIEF), deliveryMode: z.enum(['live', 'generic', 'good']).default('live') }).strict();
+const QuoteInput = z.object({ buyer: AddressSchema.optional(), serviceId: z.enum(['launch-plan-v1', 'agent-work-v1']).default('launch-plan-v1'), brief: bounded(1200).refine(value => value.trim().length > 0).default(SAMPLE_BRIEF), deliveryMode: z.enum(['live', 'generic', 'good']).default('live') }).strict();
 const generic = 'Build awareness and stay consistent. Define your target audience and make sure your message is clear. Create engaging content across social platforms and show how TraceLite solves important problems. Build a community around your product and use feedback to improve your offering.\n\nPost regularly, engage with your audience, and focus on delivering value. Consider partnerships that can help expand your reach. Track your performance and optimize your approach based on what works. Keep your goals realistic and make the most of the resources you have.\n\nFor the first week, focus on visibility, engagement, and momentum. Ask people whether they like your product and what they think you should improve. Stay authentic, remain patient, and continue refining your strategy. A strong launch comes from consistency and a clear understanding of your users.';
 const good = 'Use the five hours to show one concrete debugging story and get feedback from backend developers.\n\n1. Spend 90 minutes making a local demonstration. Create a small sample HTTP request log with an intermittent failure. Show how the searchable timeline helps locate that request. Record a 45-second screen capture. Label the sample as synthetic, and show only features already in the prototype.\n\n2. Spend 90 minutes packaging the prototype for a trial. Write a short setup guide, include that sample log, and add a screenshot showing the timeline. Explain that logs stay local. Do not claim performance improvements or integrations you have not tested.\n\n3. Spend two hours reaching out to five backend developers in a community where you already participate. Follow its posting rules, describe the intermittent failure example, and invite them to try the prototype with synthetic or sanitized logs. Avoid broad promotional spam.\n\nAsk each person: Could you identify the failing request? Which setup step was confusing? What did you expect to click next? Would this fit your current debugging workflow? Record responses and observed stumbling points in a short note. At the end of the week, choose one specific improvement from those notes.';
 const key = (id: string) => 'orders/' + HashSchema.parse(id) + '.json';
@@ -41,13 +42,18 @@ export class OrderRepository {
       throw new ApiError('DELIVERY_CONTEXT_CONFLICT', 503, 'The committed answer did not match its receipt.');
     return { value, etag: saved.etag };
   }
-  async quote(input: unknown) {
+  async quote(input: unknown, principal?: Principal) {
     const data = QuoteInput.parse(input), config = this.options.config;
+    const buyer = data.buyer ?? (principal?.role === 'buyer' ? principal.address : undefined);
+    if (!buyer) throw new ApiError('INVALID_INPUT', 400, 'A buyer wallet is required.');
+    authorizeBuyer(principal, buyer);
+    if (data.serviceId === 'agent-work-v1' && (!input || typeof input !== 'object' || !('brief' in input)))
+      throw new ApiError('INVALID_INPUT', 400, 'Describe the work in a custom brief.');
     if (!config.receiptKey || !config.receiptSigner || !config.seller || !config.courtAddress || !this.options.payments)
       throw new ApiError('SERVICE_NOT_CONFIGURED', 503, 'Live purchases are not configured.');
     if (data.deliveryMode === 'live' && !this.options.model)
       throw new ApiError('MODEL_NOT_CONFIGURED', 503, 'The seller model is not configured. Choose an explicitly labelled fixture.');
-    const agreement = createAgreement({ buyer: data.buyer, seller: config.seller, receiptSigner: config.receiptSigner,
+    const agreement = createAgreement({ buyer, serviceId: data.serviceId, seller: config.seller, receiptSigner: config.receiptSigner,
       origin: config.origin, brief: data.brief, now: Math.floor(this.now() / 1000), price: config.price, courtAddress: config.courtAddress, courtNetwork: config.courtNetwork });
     const sellerSignature = await privateKeyToAccount(config.receiptKey).signTypedData(recordTypedData('agreement', hashContent(agreement)));
     const order = OrderSchema.parse({ schemaVersion: 1, agreement, sellerSignature, buyerAcceptance: null,
@@ -131,7 +137,8 @@ export class OrderRepository {
         { id: 'delivery', kind: 'delivery', at: timestamp, label: 'Original answer committed and signed' }],
       provenance: { source: 'live', fixtureLabel: order.mode === 'fixture' ? order.deliveryMode + ' delivery fixture' : null,
         disclosure: order.mode === 'fixture' ? 'The delivered answer is an explicitly selected fixture. Payment, buyer evaluation, court adjudication and any refund use real integrations.' :
-          'Seller generation, payment, court adjudication and any refund use live integrations. The product brief describes fictional TraceLite.' },
+          order.agreement.serviceId === 'launch-plan-v1' ? 'Seller generation, payment, court adjudication and any refund use live integrations. The product brief describes fictional TraceLite.' :
+          'Seller generation, payment, court adjudication and any refund use live integrations. The buyer supplied the work brief.' },
     });
     return { case: manifest, deliverySignature: order.deliverySignature };
   }

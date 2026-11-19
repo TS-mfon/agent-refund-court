@@ -202,3 +202,25 @@ test('Gemini 2.5 Flash-Lite retains its documented thinking-off configuration', 
   } });
   assert.equal(await m.seller(agreement), 'A plan.');
 });
+
+test('custom seller work follows its exact brief without imposing a launch campaign', async () => {
+  const custom = { ...agreement, serviceId: 'agent-work-v1' as const, rubricId: 'agent-work-v1' as const,
+    brief: 'Compare SQLite and Postgres for a solo-built scheduling app.' };
+  const m = model('SQLite keeps deployment simple; Postgres supports concurrent writes.', (_body, _url, init) => {
+    const request = JSON.parse(String(init?.body)) as { contents: { parts: { text: string }[] }[]; generationConfig: Record<string, unknown> };
+    const prompt = request.contents[0].parts[0].text;
+    assert.ok(prompt.includes(custom.brief));
+    assert.ok(!prompt.includes('first-week launch plan'));
+    assert.ok(!prompt.includes('three practical actions'));
+    assert.equal(request.generationConfig.maxOutputTokens, 512);
+  });
+  assert.match(await m.seller(custom), /SQLite/);
+});
+
+test('legacy seller task still requests the first-week launch plan', async () => {
+  const m = model('A practical plan.', (_body, _url, init) => {
+    const request = JSON.parse(String(init?.body)) as { contents: { parts: { text: string }[] }[] };
+    assert.ok(request.contents[0].parts[0].text.includes('first-week launch plan'));
+  });
+  assert.equal(await m.seller(agreement), 'A practical plan.');
+});

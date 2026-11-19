@@ -96,4 +96,41 @@ class CourtTests(unittest.TestCase):
             return leader()
         gl.nondet.exec_prompt=lambda *args,**kwargs:refund;gl.vm.run_nondet_unsafe=nondet
         self.contract.adjudicate(self.e["caseId"])
+
+    def test_custom_service_admission_and_task_specific_prompt(self):
+        e=copy.deepcopy(self.e)
+        e["agreement"]["serviceId"]="agent-work-v1"
+        e["agreement"]["rubricId"]="agent-work-v1"
+        e["agreement"]["brief"]="Compare SQLite and Postgres for a small scheduling app."
+        e["agreementHash"]=hash_value(e["agreement"])
+        self.register(e)
+        prompt=court._prompt(e)
+        self.assertIn(e["agreement"]["brief"],prompt)
+        self.assertIn(e["delivery"]["text"],prompt)
+        self.assertNotIn("launch plan",prompt)
+        self.assertNotIn("promotion suggestions",prompt)
+        self.assertEqual(self.contract.get_case(e["caseId"])["canonicalEvidence"],court._canonical(e))
+        self.assertEqual(self.contract.get_config()["supportedServices"],["launch-plan-v1","agent-work-v1"])
+    def test_service_and_rubric_must_match(self):
+        for service,rubric in (("agent-work-v1","launch-plan-v1"),("launch-plan-v1","agent-work-v1"),("unknown","unknown")):
+            e=copy.deepcopy(self.e)
+            e["agreement"]["serviceId"]=service;e["agreement"]["rubricId"]=rubric
+            e["agreementHash"]=hash_value(e["agreement"])
+            with self.subTest(service=service,rubric=rubric),self.assertRaises(UserError):
+                self.register(e)
+    def test_custom_dispute_uses_independent_substantive_validation(self):
+        e=copy.deepcopy(self.e)
+        e["agreement"]["serviceId"]="agent-work-v1";e["agreement"]["rubricId"]="agent-work-v1"
+        e["agreement"]["brief"]="Compare SQLite and Postgres for a scheduling app."
+        e["agreementHash"]=hash_value(e["agreement"]);self.register(e)
+        result=dict(decision="REFUND",materialFailure=True,reasoning="The response does not compare the requested databases.",failedCriteria=["relevance"])
+        prompts=[]
+        def model(prompt,**kwargs):prompts.append(prompt);return result
+        def nondet(leader,validator):
+            value=leader();self.assertTrue(validator(Return(value)));return value
+        gl.nondet.exec_prompt=model;gl.vm.run_nondet_unsafe=nondet
+        self.contract.adjudicate(e["caseId"])
+        self.assertEqual(len(prompts),2);self.assertEqual(prompts[0],prompts[1])
+        self.assertEqual(self.contract.get_case(e["caseId"])["result"],result)
+
 if __name__=="__main__":unittest.main()

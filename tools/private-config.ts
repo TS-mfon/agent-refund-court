@@ -17,6 +17,7 @@ export async function loadPrivateEnvironment() {
   const w=wallets[role];if(!w||privateKeyToAccount(key.parse(w.privateKey) as `0x${string}`).address.toLowerCase()!==w.address.toLowerCase())throw new Error('Private wallet identity mismatch');
  }
  const model=await privateJSON('model.json') as {apiKey:string;model:string};
+ const deployment=z.object({contractAddress:z.string().regex(/^0x[0-9a-fA-F]{40}$/)}).parse(JSON.parse(await readFile(new URL('../docs/deployment.json',import.meta.url),'utf8')));
  let runtime:Record<string,string>={};
  try{runtime=await privateJSON('runtime.json') as Record<string,string>;}
  catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw e;}
@@ -25,7 +26,7 @@ export async function loadPrivateEnvironment() {
  catch(e){if((e as NodeJS.ErrnoException).code!=='ENOENT')throw e;}
  return {...local,
   SERVICE_ORIGIN:runtime.SERVICE_ORIGIN??'https://agent-refund-court.vercel.app',
-  GENLAYER_CONTRACT:'0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6',
+  GENLAYER_CONTRACT:runtime.GENLAYER_CONTRACT??deployment.contractAddress,
   GENLAYER_NETWORK:'studionet',GENLAYER_RPC_URL:'https://studio.genlayer.com/api',
   SELLER_ADDRESS:wallets.seller.address,SELLER_PRIVATE_KEY:wallets.seller.privateKey,
   RECEIPT_SIGNER_PRIVATE_KEY:wallets.receiptSigner.privateKey,

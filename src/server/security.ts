@@ -3,23 +3,36 @@ import type { RequestHandler, ErrorRequestHandler } from 'express';
 import { ZodError } from 'zod';
 import { PaymentError } from '../payments/index.js';
 import { StorageConflict } from '../storage/index.js';
-import { ApiError, type ServerOptions } from './types.js';
+import { WalletAuthentication } from './auth.js';
+import { ApiError, type Principal, type ServerOptions } from './types.js';
 
 const digest = (value: string) => createHash('sha256').update(value).digest();
-export function authenticated(options: ServerOptions): RequestHandler {
+export function allowedOrigin(options: ServerOptions): RequestHandler {
   return (req, _res, next) => {
-    const expected = options.config.accessToken;
-    const header = req.get('authorization') ?? '';
-    if (!expected || !header.startsWith('Bearer ') || header.length > 1024 ||
-      !timingSafeEqual(digest(header.slice(7)), digest(expected))) {
-      return next(new ApiError('UNAUTHORIZED', 401, 'A valid demo access token is required.'));
-    }
     const origin = req.get('origin');
-    if (origin && origin !== options.config.origin) {
+    if (origin && origin !== options.config.origin)
       return next(new ApiError('ORIGIN_REJECTED', 403, 'This request origin is not allowed.'));
-    }
     next();
   };
+}
+export function authenticated(options: ServerOptions): RequestHandler {
+  const walletAuth = new WalletAuthentication(options);
+  return async (req, res, next) => {
+    const expected = options.config.accessToken, header = req.get('authorization') ?? '';
+    if (!header.startsWith('Bearer ') || header.length > 1024)
+      throw new ApiError('UNAUTHORIZED', 401, 'A valid wallet session or operator access token is required.');
+    const origin = req.get('origin');
+    if (origin && origin !== options.config.origin) throw new ApiError('ORIGIN_REJECTED', 403, 'This request origin is not allowed.');
+    const accessToken = header.slice(7);
+    const principal: Principal = expected && timingSafeEqual(digest(accessToken), digest(expected)) ?
+      { role: 'operator' } : await walletAuth.authenticate(accessToken);
+    res.locals.principal = principal;
+    next();
+  };
+}
+export function authorizeBuyer(principal: Principal | undefined, address: string, code = 'ORDER_NOT_FOUND') {
+  if (principal?.role === 'buyer' && principal.address.toLowerCase() !== address.toLowerCase())
+    throw new ApiError(code, 404, 'This resource could not be found.');
 }
 /** Per-instance public limit; authenticated writes also use the shared durable counter. */
 export function requestLimits(options: ServerOptions): RequestHandler {
@@ -47,7 +60,7 @@ export function durableWriteLimit(options: ServerOptions): RequestHandler {
       const current = await options.store.get<{ count: number }>(key);
       if ((current?.value.count ?? 0) >= 120) {
         res.set('Retry-After', '60');
-        return next(new ApiError('RATE_LIMITED', 429, 'The demo action limit was reached. Retry in a minute.'));
+        return next(new ApiError('RATE_LIMITED', 429, 'The service action limit was reached. Retry in a minute.'));
       }
       if (current) await options.store.compareAndSwap(key, { count: current.value.count + 1 }, current.etag);
       else await options.store.create(key, { count: 1 });
@@ -60,6 +73,8 @@ export function durableWriteLimit(options: ServerOptions): RequestHandler {
 export const errorResponse: ErrorRequestHandler = (error, _req, res, _next) => {
   if (res.headersSent) return;
   if (error instanceof ApiError) {
+    if (error.status === 401) res.set('WWW-Authenticate', 'Bearer');
+    if (error.status === 429) res.set('Retry-After', String(error.retryAfterSeconds ?? 60));
     res.status(error.status).json({ success: false, error: { code: error.code, message: error.userMessage } });
     return;
   }

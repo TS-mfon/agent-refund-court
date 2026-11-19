@@ -15,15 +15,20 @@ Lead with the agent skill and show the web case viewer as its proof surface. The
 | Public clean source | Repository includes code, lockfile, tests, trust assumptions, environment example, and attribution |
 | Professional video | Edited MP4 at most 45 seconds, with all three authentic logos and legible disclosures |
 
-The contract deployment is finalized:
+The current two-service contract deployment is finalized:
 
 ```text
 network: GenLayer StudioNet
-contract: 0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6
-deployment transaction: 0xb74289010dcc82b75db4215df5fb3d87b9a1df9e82e98b016dd1972c3cd12b6c
+contract: 0x4eaf1BAc12573BDeA26a0c437D1f2ED4914600Ed
+deployment transaction: 0x631642b2b0680b934a67c1f73fcdef8d482ed08678feed3839d97731f78e5521
+supported services: launch-plan-v1, agent-work-v1
 ```
 
-At the time this submission plan was written, live purchase, adjudication, refund, independent reproduction, and video export still needed their own evidence. This document is a production checklist, not a claim that those steps have completed. The final release must identify the actual case and transaction hashes.
+Live purchase, finalized adjudication and confirmed refund now have independently verified receipts in [live-proof.md](live-proof.md). The original case is 0x4b3068cb77f1f4e2db7de1ccd08a335ed5d70855a475f9218e96bd023eef4bcc. A separate live-generated answer was purchased and independently accepted. That recorded ruling belongs to the original `0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6` court, preserved in [its deployment manifest](deployments/launch-plan-v1.json). It does not establish a fresh ruling on the current custom-service deployment.
+
+[Video provenance](../demo-video/provenance.json) records the existing H.264 export as 44 seconds, 1920×1080 at 30 fps, with intentional silent captions and a recorded original testnet case. Recheck the artifact hash/duration and public URL before submission; preserve its original case and fixture disclosure. The capture revision predates the expanded site, so it should not be described as a recording of every current feature.
+
+Fresh own-wallet/custom-brief validation and current-source deployment/release verification remain separate gates in [plan.md](plan.md). Do not substitute the original recorded case or the deployment transaction for those outcomes.
 
 ## 44-second storyboard
 
@@ -50,7 +55,7 @@ Capture readable UI at 1920×1080 and use the real terminal and deployed viewer.
 
 Edit the capture with AI-assisted motion or a code-authored video tool such as Remotion: animate the evidence-to-ruling-to-transfer sequence, tighten cuts, and generate captions from the final script. An unedited screen recording alone does not meet the brief. Keep motion focused on the proof and use restrained sound.
 
-The deliverable is an H.264 MP4, 44 seconds, with clear captions. Verify duration, audio intelligibility, logo visibility, and readability on a small screen. Test the public viewer and repository URLs before export and again before submitting by November 23, 2026.
+The deliverable is an H.264 MP4, 44 seconds, with clear captions. Verify duration, all three logos, motion, caption readability and disclosures on a small screen. The existing export intentionally uses silent captions; narration is optional and should be validated if added. Test the public viewer and repository URLs before export and again before submitting by November 23, 2026.
 
 ## Final release record
 

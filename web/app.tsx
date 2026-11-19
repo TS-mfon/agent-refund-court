@@ -1,281 +1,31 @@
 import { useEffect, useState } from 'react';
-import { BrandLogos, CourtMark } from './brand.js';
-import { CaseDetail } from './case-detail.js';
+import { CourtMark } from './brand.js';
+import { CasePage, CasesPage } from './cases-page.js';
+import { Arrow, REPOSITORY } from './components.js';
+import { ConnectPage } from './connect-page.js';
+import { DocsPage } from './docs-page.js';
+import { HomePage } from './home-page.js';
+import { Link, navigate, useRoute } from './router.js';
+import { ServicesPage } from './services-page.js';
+import { StatusPage, useActivity } from './activity.js';
 import { useCases } from './use-cases.js';
-import { initialSelection } from './presentation.js';
-import {
-	shortHash,
-	sourceLabel,
-	statusLabel,
-	displayTime,
-	formatMoney,
-	safeExternalUrl,
-} from './model.js';
-
-const REPOSITORY = 'https://github.com/TS-mfon/agent-refund-court';
-function Reproduce() {
-	const [copied, setCopied] = useState(false);
-	const origin =
-		typeof window === 'undefined'
-			? 'https://agent-refund-court.vercel.app'
-			: window.location.port === '5173'
-				? 'http://127.0.0.1:3001'
-				: window.location.origin;
-	const command = 'npm run demo -- --origin ' + origin + ' --scenario bad';
-	async function copy() {
-		try {
-			await navigator.clipboard.writeText(command);
-			setCopied(true);
-		} catch {
-			setCopied(false);
-		}
-	}
-	return (
-		<section id="reproduce" className="reproduce">
-			<div>
-				<h2>Put your agent on the buyer’s side.</h2>
-				<p>
-					The skill runs the purchase and buyer review. This page follows the
-					published case as the court and seller worker advance it.
-				</p>
-				<a
-					href={REPOSITORY + '/blob/main/skills/agent-refund-court/SKILL.md'}
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Read the agent skill
-				</a>
-			</div>
-			<div className="run-instructions">
-				<p>From the configured repository</p>
-				<div className="command">
-					<code>{command}</code>
-					<button
-						type="button"
-						className="copy-button"
-						onClick={() => {
-							void copy();
-						}}
-					>
-						{copied ? 'Copied' : 'Copy'}
-					</button>
-				</div>
-				<p>
-					Use the setup guide to supply a demo access token and a Base Sepolia
-					buyer wallet. The buyer keeps its signing key locally.
-				</p>
-				<a
-					href={REPOSITORY + '/blob/main/docs/reproduction.md'}
-					target="_blank"
-					rel="noopener noreferrer"
-				>
-					Setup and reproduction guide
-				</a>
-			</div>
-		</section>
-	);
+const nav=[{href:'/cases',label:'Cases'},{href:'/services',label:'Services'},{href:'/docs/getting-started',label:'Docs'}];
+function ThemeButton({theme,setTheme}:{theme:'light'|'dark';setTheme:(value:'light'|'dark')=>void}) {
+ return <button type="button" className="theme-button" aria-label={'Switch to '+(theme==='light'?'night':'day')+' mode'} onClick={()=>setTheme(theme==='light'?'dark':'light')}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true">{theme==='light'?<path d="M20 15.2A8.5 8.5 0 0 1 8.8 4A8.5 8.5 0 1 0 20 15.2Z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"/>:<><circle cx="12" cy="12" r="4" stroke="currentColor" strokeWidth="1.7"/><path d="M12 2V4M12 20V22M2 12H4M20 12H22M5 5L6.5 6.5M17.5 17.5L19 19M5 19L6.5 17.5M17.5 6.5L19 5" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round"/></>}</svg></button>;
 }
-export function App() {
-	const [selectedId, setSelectedId] = useState<string | null>(() =>
-		typeof window === 'undefined'
-			? null
-			: initialSelection(window.location.search),
-	);
-	const [polling, setPolling] = useState(true);
-	const { cases, current, service, loading, error, checkedAt, refresh } =
-		useCases(selectedId, polling);
-	useEffect(() => {
-		const update = () =>
-			setSelectedId(initialSelection(window.location.search));
-		window.addEventListener('popstate', update);
-		return () => window.removeEventListener('popstate', update);
-	}, []);
-	function select(id: string) {
-		setSelectedId(id);
-		const url = new URL(window.location.href);
-		url.searchParams.set('case', id);
-		window.history.pushState(null, '', url.pathname + url.search);
-	}
-	const repository = safeExternalUrl(service?.repository) ?? REPOSITORY;
-	return (
-		<>
-			<a className="skip-link" href="#cases">
-				Skip to cases
-			</a>
-			<header className="site-header">
-				<a
-					className="app-identity"
-					href="/"
-					aria-label="Agent Refund Court home"
-				>
-					<CourtMark />
-					<span>Agent Refund Court</span>
-				</a>
-				<nav aria-label="Main navigation">
-					<a href="#cases">Cases</a>
-					<a href="#reproduce">Run with an agent</a>
-					<a href={repository} target="_blank" rel="noopener noreferrer">
-						Source code
-					</a>
-				</nav>
-			</header>
-			<main className="site-main">
-				<section className="intro">
-					<div className="intro-copy">
-						<h1>A bad answer can become a fair outcome.</h1>
-						<p>
-							An agent buys a launch plan through x402. Internet Court judges a
-							quality dispute on GenLayer. A finalized refund ruling sends the
-							paid USDC back to the buyer.
-						</p>
-					</div>
-					<div className="intro-partners">
-						<BrandLogos />
-						<p>A small, reproducible proof for agent commerce.</p>
-						<span className="testnet-badge">
-							Base Sepolia + GenLayer Studio
-						</span>
-					</div>
-				</section>
-				<section id="cases" className="viewer" aria-label="Published cases">
-					<div className="viewer-toolbar">
-						<div>
-							<h2>Follow the case</h2>
-							<p>
-								{checkedAt
-									? 'Checked ' + displayTime(checkedAt)
-									: 'Reading published evidence…'}
-							</p>
-						</div>
-						<div className="viewer-controls">
-							<label className="polling-label">
-								<input
-									type="checkbox"
-									checked={polling}
-									onChange={(event) => setPolling(event.target.checked)}
-								/>
-								<span>Auto-refresh</span>
-							</label>
-							<button
-								className="button secondary"
-								type="button"
-								disabled={loading}
-								onClick={refresh}
-							>
-								{loading ? 'Checking…' : 'Refresh'}
-							</button>
-						</div>
-					</div>
-					{error ? (
-						<div className="service-error" role="alert">
-							<strong>The case service could not be read.</strong>
-							<p>{error}</p>
-							{cases.length ? (
-								<p>
-									Previously loaded evidence is still visible. Its status may
-									have changed.
-								</p>
-							) : null}
-							<button
-								className="button secondary"
-								onClick={refresh}
-								type="button"
-							>
-								Retry
-							</button>
-						</div>
-					) : null}
-					{loading && !cases.length ? (
-						<div className="loading-case" role="status">
-							<span className="loading-ring" aria-hidden="true" />
-							<p>Loading the case and its receipts…</p>
-						</div>
-					) : null}
-					{!loading && !error && !cases.length ? (
-						<div className="empty-case">
-							<CourtMark />
-							<h3>No case has been published yet.</h3>
-							<p>
-								Run the agent skill to create a testnet purchase. Payment,
-								ruling, and refund receipts will appear here as they are
-								verified.
-							</p>
-							<a className="button primary" href="#reproduce">
-								Run with an agent
-							</a>
-						</div>
-					) : null}
-					{cases.length ? (
-						<div className="case-workspace">
-							<aside className="case-list" aria-label="Choose a published case">
-								<div className="list-title">
-									<h3>Published cases</h3>
-									<span>{cases.length}</span>
-								</div>
-								{cases.map((c) => (
-									<button
-										key={c.id}
-										type="button"
-										className={
-											'case-option ' + (current?.id === c.id ? 'selected' : '')
-										}
-										aria-pressed={current?.id === c.id}
-										onClick={() => select(c.id)}
-									>
-										<strong>Launch plan</strong>
-										<span>{shortHash(c.id)}</span>
-										<span className="case-option-status">{statusLabel(c)}</span>
-										<small>{sourceLabel(c)}</small>
-									</button>
-								))}
-								<div className="service-summary">
-									<h3>The purchase</h3>
-									<p>
-										{service
-											? formatMoney(service.priceBaseUnits) + ' USDC'
-											: 'Price in each agreement'}
-									</p>
-									<p>
-										A tailored plan for a solo builder with five hours and no
-										advertising budget.
-									</p>
-									<p className="muted">
-										{service
-											? service.capabilities.purchase
-												? 'Agent purchases enabled'
-												: 'Purchase service unavailable'
-											: 'Service metadata unavailable'}
-									</p>
-								</div>
-							</aside>
-							{current ? (
-								<CaseDetail key={current.id} caseFile={current} />
-							) : (
-								<div className="empty-case">
-									<h3>The selected case is unavailable.</h3>
-									<p>Choose a published case to inspect its evidence.</p>
-								</div>
-							)}
-						</div>
-					) : null}
-				</section>
-				<Reproduce />
-				<section className="trust-note">
-					<h2>The court judges. The seller pays.</h2>
-					<p>
-						GenLayer independently evaluates the bounded brief, answer, and
-						quality rubric. A trusted registrar admits payment facts; the
-						seller’s worker applies the finalized ruling. This demo demonstrates
-						a cooperative seller returning testnet USDC.
-					</p>
-				</section>
-			</main>
-			<footer className="site-footer">
-				<span>Built for the Internet Court Builders Working Group</span>
-				<a href={repository} target="_blank" rel="noopener noreferrer">
-					Public code and receipts
-				</a>
-			</footer>
-		</>
-	);
+export function App(){
+ const route=useRoute(),[polling,setPolling]=useState(true),[menu,setMenu]=useState(false);
+ const [theme,setTheme]=useState<'light'|'dark'>(()=>{try{return localStorage.getItem('arc:theme:v1')==='dark'?'dark':'light';}catch{return 'light';}});
+ const state=useCases(route.page==='case'?route.id:null,polling&&(route.page==='home'||route.page==='cases'||route.page==='case'));
+ const activity=useActivity();
+ useEffect(()=>{document.documentElement.dataset.theme=theme;try{localStorage.setItem('arc:theme:v1',theme);}catch{/* Theme still applies when storage is unavailable. */}},[theme]);
+ useEffect(()=>{
+  setMenu(false);
+  const title=route.page==='home'?'Agent Refund Court — good work, fair outcomes':route.page==='case'?'Case evidence — Agent Refund Court':route.page==='docs'?'Documentation — Agent Refund Court':route.page.charAt(0).toUpperCase()+route.page.slice(1)+' — Agent Refund Court';
+  document.title=title;
+  if(route.page==='case'&&window.location.pathname==='/')navigate('/cases/'+route.id,true);
+ },[route.page,route.page==='case'?route.id:route.page==='docs'?route.slug:'']);
+ return <><a className="skip-link" href="#main">Skip to content</a><header className="site-header"><Link className="app-identity" href="/" aria-label="Agent Refund Court home"><CourtMark/><span>Agent<br/><strong>Refund Court</strong></span></Link><nav className={'main-nav '+(menu?'menu-open':'')} id="main-navigation" aria-label="Main navigation">{nav.map(item=><Link key={item.href} href={item.href} aria-current={route.page===(item.label==='Docs'?'docs':item.label.toLowerCase())?'page':undefined}>{item.label}</Link>)}<a href={REPOSITORY} target="_blank" rel="noopener noreferrer" className="source-link">Source<Arrow diagonal/></a></nav><div className="header-actions"><ThemeButton theme={theme} setTheme={setTheme}/><Link href="/connect" className="button primary connect-cta">Connect agent<Arrow/></Link><button className="menu-button" type="button" aria-label={menu?'Close navigation':'Open navigation'} aria-expanded={menu} aria-controls="main-navigation" onClick={()=>setMenu(value=>!value)}><svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d={menu?'M6 6L18 18M6 18L18 6':'M4 7H20M4 12H20M4 17H20'} stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/></svg></button></div></header>
+  <main className="site-main" id="main" key={route.page==='docs'?'docs':route.page} tabIndex={-1}>{route.page==='home'?<HomePage state={state}/>:route.page==='cases'?<CasesPage state={state} polling={polling} setPolling={setPolling}/>:route.page==='case'?<CasePage state={state} polling={polling} setPolling={setPolling}/>:route.page==='services'?<ServicesPage/>:route.page==='connect'?<ConnectPage/>:route.page==='docs'?<DocsPage slug={route.slug}/>:route.page==='status'?<StatusPage activity={activity} state={state}/>:<div className="page empty-case"><h1>That page could not be found.</h1><p>Browse the protocol, published cases or developer documentation.</p><Link href="/" className="button primary">Go home<Arrow/></Link></div>}</main>
+  <footer className="site-footer"><div className="footer-brand"><CourtMark/><div><strong>Agent Refund Court</strong><p>Clear agreements. Verifiable outcomes.</p></div></div><div className="footer-links"><Link href="/docs/protocol">Protocol</Link><Link href="/status">Service status</Link><a href="/demo.mp4" target="_blank" rel="noopener noreferrer">Watch demo</a><a href={REPOSITORY} target="_blank" rel="noopener noreferrer">GitHub<Arrow diagonal/></a></div><div className="footer-bottom"><span>Built for the Internet Court Builders Working Group.</span><span>Base Sepolia + GenLayer Studio testnets</span></div></footer></>;
 }

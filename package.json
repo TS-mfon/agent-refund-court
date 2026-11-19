@@ -24,6 +24,7 @@
     "model:verify": "node --use-env-proxy --import tsx tools/run-private.ts model"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "2.4.0",
     "@vercel/blob": "2.9.0",
     "@x402/core": "2.31.0",
     "@x402/evm": "2.31.0",
@@ -46,6 +47,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "2.6.8",
+    "@modelcontextprotocol/client": "2.4.0",
     "@playwright/test": "1.65.1",
     "@types/express": "5.0.6",
     "@types/node": "26.6.6",

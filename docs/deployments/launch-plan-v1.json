@@ -1,0 +1,13 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "rpc": "https://studio.genlayer.com/api",
+  "contractAddress": "0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6",
+  "transactionHash": "0xb74289010dcc82b75db4215df5fb3d87b9a1df9e82e98b016dd1972c3cd12b6c",
+  "registrar": "0xF3662F79ea1b2f5a6D175bf20b3ca1F8A410F27e",
+  "rubricVersion": "launch-plan-v1",
+  "runner": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+  "sourceHash": "0x3e16f80d6402852117f24cf8083030bb5d512577a39356492413f815c2576006",
+  "status": "finalized",
+  "verified": true
+}

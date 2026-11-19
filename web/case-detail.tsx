@@ -9,6 +9,7 @@ import {
 } from './model.js';
 import { stagesFor, outcomeFor } from './presentation.js';
 import { EvidenceInspector } from './evidence-inspector.js';
+import { caseTitle } from './protocol-model.js';
 
 function ReceiptLink({
 	label,
@@ -43,7 +44,7 @@ export function CaseDetail({ caseFile: c }: { caseFile: CaseManifest }) {
 			<header className="case-heading">
 				<div>
 					<p className="case-reference">Case {shortHash(c.id)}</p>
-					<h2 id="case-heading">A first-week launch plan.</h2>
+					<h2 id="case-heading">{caseTitle(c)}.</h2>
 				</div>
 				<span className={'status-pill ' + outcome.tone}>{statusLabel(c)}</span>
 			</header>

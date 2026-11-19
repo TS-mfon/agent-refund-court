@@ -22,3 +22,27 @@ describe('agreement and evidence boundaries',()=>{
   for(const config of [{SELLER_ADDRESS:'bad'},{PRICE_BASE_UNITS:'-1'},{SERVICE_ORIGIN:'http://evil.example'}])assert.throws(()=>loadConfig(config));
  });
 });
+
+describe('custom paid work agreements', () => {
+ it('binds the exact custom brief to its service and fixed rubric', () => {
+  const address = '0x' + '11'.repeat(20);
+  const brief = 'Compare SQLite and Postgres for a solo-built scheduling app.';
+  const custom = createAgreement({ buyer: address, seller: address, receiptSigner: address,
+   origin: 'https://demo.example', brief, now: 1700000000, serviceId: 'agent-work-v1' });
+  assert.equal(custom.serviceId, 'agent-work-v1');
+  assert.equal(custom.rubricId, 'agent-work-v1');
+  assert.equal(custom.brief, brief);
+  assert.deepEqual(custom.rubric, RUBRIC);
+  assert.equal(AgreementSchema.parse(custom).serviceId, 'agent-work-v1');
+  assert.throws(() => AgreementSchema.parse({ ...custom, rubricId: 'launch-plan-v1' }));
+  assert.throws(() => AgreementSchema.parse({ ...custom, serviceId: 'unknown-service' }));
+ });
+ it('preserves the original launch-plan agreement by default', () => {
+  const address = '0x' + '11'.repeat(20);
+  const legacy = createAgreement({ buyer: address, seller: address, receiptSigner: address,
+   origin: 'https://demo.example', brief: SAMPLE_BRIEF, now: 1700000000 });
+  assert.equal(legacy.serviceId, 'launch-plan-v1');
+  assert.equal(legacy.rubricId, 'launch-plan-v1');
+  assert.throws(() => AgreementSchema.parse({ ...legacy, rubricId: 'agent-work-v1' }));
+ });
+});

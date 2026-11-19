@@ -1,0 +1,43 @@
+{
+  "caseId": "0x4b3068cb77f1f4e2db7de1ccd08a335ed5d70855a475f9218e96bd023eef4bcc",
+  "mode": "fixture",
+  "viewer": "https://agent-refund-court.vercel.app/?case=0x4b3068cb77f1f4e2db7de1ccd08a335ed5d70855a475f9218e96bd023eef4bcc",
+  "disclosure": "The delivered answer is an explicitly selected fixture. Payment, buyer evaluation, court adjudication and any refund use real integrations.",
+  "verifiedAt": "2026-11-19T07:57:53.934Z",
+  "verification": {
+    "payment": true,
+    "deliverySignature": true,
+    "finalCourt": true,
+    "exactRefund": true,
+    "method": "tools/verify-proof.ts reads original checkout signatures and canonical chain receipts"
+  },
+  "buyerAddress": "0x52003285023BFC1Ceac4de6ec9a55585200366b8",
+  "sellerAddress": "0xCa8d946a096cD8497C15865F8124007030Ea437d",
+  "currency": {
+    "symbol": "USDC",
+    "chainId": 84532,
+    "contractAddress": "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    "principalBaseUnits": "10000"
+  },
+  "evidenceHash": "0xa2c08abab6184cab463d740af7140e6686d6dd8d88022dc06eab05de5ea300a0",
+  "payment": {
+    "transactionHash": "0x3e296839fb2ddb81505cb3210c85dc5b55678cd9856e2069c39ca5e3435009d4",
+    "blockNumber": "60693473",
+    "blockHash": "0xb7eaad244d1e8e91a5382763babb0573a1a989d4ac3a3b4e60790af00a41781f"
+  },
+  "court": {
+    "network": "studionet",
+    "contractAddress": "0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6",
+    "transactionHash": "0xd61d1c5e96f197c29df9bc84661f438baa82952f75d15f5adda491c1d375d66a",
+    "status": "finalized",
+    "decision": "REFUND"
+  },
+  "refund": {
+    "transactionHash": "0x0f9639338e0f94c7ea6736634b20b3904a4b8f67db75edeee7cf135edb000ea0",
+    "blockNumber": "60761787",
+    "blockHash": "0x89b323efa6a7c307867dca3fbe42ca19fff8eba4d28c2cb3e342fd09a1b2fe1e",
+    "principalBaseUnits": "10000",
+    "recipient": "0x52003285023BFC1Ceac4de6ec9a55585200366b8",
+    "financialNonce": "0x047208d47ee9c6e6a2f5233fbdda9d109160c348490c559248cf56e107aaa986"
+  }
+}

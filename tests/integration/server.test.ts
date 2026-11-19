@@ -16,10 +16,10 @@ const tx = '0x' + '91'.repeat(32);
 const block = '0x' + '92'.repeat(32);
 const decision = { action: 'dispute' as const, materialFailure: true, criterionIds: ['actionability' as const], reason: 'Generic work lacks concrete actions.', quotes: ['Build awareness'] };
 
-function fixture(options: { pending?: boolean; failModel?: boolean; failDefense?: boolean } = {}) {
+function fixture(options: { pending?: boolean; failModel?: boolean; failDefense?: boolean; public?: boolean } = {}) {
   const buyer = privateKeyToAccount(generatePrivateKey()), seller = privateKeyToAccount(generatePrivateKey()), signerKey = generatePrivateKey();
   const store = new MemoryStateStore();
-  const config = loadConfig({ SELLER_ADDRESS: seller.address, RECEIPT_SIGNER_PRIVATE_KEY: signerKey, GENLAYER_CONTRACT: court, DEMO_ACCESS_TOKEN: token, BLOB_READ_WRITE_TOKEN: 'unit-test-blob', GEMINI_API_KEY: 'unit-test-model' });
+  const config = loadConfig({ SELLER_ADDRESS: seller.address, RECEIPT_SIGNER_PRIVATE_KEY: signerKey, GENLAYER_CONTRACT: court, DEMO_ACCESS_TOKEN: options.public ? undefined : token, BLOB_READ_WRITE_TOKEN: 'unit-test-blob', GEMINI_API_KEY: 'unit-test-model' });
   let generations = 0, settlements = 0, processing = 0, paid = false;
   const proof = (c: PaymentContext) => PaymentProofSchema.parse({ chainId: 84532, network: 'eip155:84532', token: c.agreement.token, payer: c.agreement.buyer, seller: c.agreement.seller, amount: c.agreement.amount, authorizationNonce: c.payment.payload.authorization.nonce, transactionHash: tx, blockNumber: '100', blockHash: block, verified: true });
   const payments = new PaymentService({ store, policy: { seller: seller.address, origin: config.origin, amount: config.price }, facilitator: {
@@ -33,17 +33,24 @@ function fixture(options: { pending?: boolean; failModel?: boolean; failDefense?
   return { buyer, seller, config, store, app, calls: () => ({ generations, settlements, processing }) };
 }
 
-async function purchase(f: ReturnType<typeof fixture>, deliveryMode = 'live') {
-  const created = await request(f.app).post('/api/v1/orders').set('Authorization', 'Bearer ' + token).send({ buyer: f.buyer.address, brief: SAMPLE_BRIEF, deliveryMode }).expect(201);
+async function purchase(f: ReturnType<typeof fixture>, deliveryMode = 'live', accessToken = token, serviceId = 'launch-plan-v1') {
+  const created = await request(f.app).post('/api/v1/orders').set('Authorization', 'Bearer ' + accessToken).send({ buyer: f.buyer.address, brief: SAMPLE_BRIEF, deliveryMode, serviceId }).expect(201);
   const order = created.body.order;
   const buyerAcceptance = await f.buyer.signTypedData(recordTypedData('acceptance', hashContent(order.agreement)));
-  await request(f.app).post('/api/v1/orders/' + order.agreement.orderId + '/acceptance').set('Authorization', 'Bearer ' + token).send({ buyerAcceptance }).expect(200);
-  const unpaid = await request(f.app).get('/api/v1/orders/' + order.agreement.orderId + '/delivery').set('Authorization', 'Bearer ' + token).expect(402);
+  await request(f.app).post('/api/v1/orders/' + order.agreement.orderId + '/acceptance').set('Authorization', 'Bearer ' + accessToken).send({ buyerAcceptance }).expect(200);
+  const unpaid = await request(f.app).get('/api/v1/orders/' + order.agreement.orderId + '/delivery').set('Authorization', 'Bearer ' + accessToken).expect(402);
   assert.ok(unpaid.headers['payment-required']);
   const context = await prepareCheckout({ agreement: order.agreement, sellerSignature: order.sellerSignature, buyerAcceptance, required: unpaid.body.paymentRequired, signer: f.buyer, store: new MemoryStateStore(), policy: { seller: f.seller.address, origin: f.config.origin, amount: f.config.price } });
   const path = '/api/v1/orders/' + order.agreement.orderId + '/delivery';
-  const response = await request(f.app).get(path).set('Authorization', 'Bearer ' + token).set(checkoutHeaders(context));
+  const response = await request(f.app).get(path).set('Authorization', 'Bearer ' + accessToken).set(checkoutHeaders(context));
   return { order, context, path, response };
+}
+
+async function publicSession(f: ReturnType<typeof fixture>, account = f.buyer) {
+  const challenge = (await request(f.app).post('/api/v1/auth/challenge').send({ address: account.address }).expect(201)).body.challenge;
+  const signature = await account.signMessage({ message: challenge.message });
+  const session = (await request(f.app).post('/api/v1/auth/session').send({ challengeId: challenge.id, signature }).expect(201)).body.session;
+  return session.accessToken as string;
 }
 
 test('public metadata works without credentials and private routes fail closed', async () => {
@@ -220,4 +227,44 @@ test('resuming a saved canonical checkout accepts equivalent payment header key 
   const repeated = await request(f.app).get(p.path).set('Authorization', 'Bearer ' + token).set(checkoutHeaders(persisted)).expect(200);
   assert.deepEqual(repeated.body, p.response.body);
   assert.deepEqual(f.calls(), { generations: 1, settlements: 1, processing: 0 });
+});
+
+test('public wallet sessions retain confirmed-payment delivery and signed buyer-only case processing', async () => {
+  const f = fixture({ public: true }), buyerToken = await publicSession(f), otherToken = await publicSession(f, f.seller);
+  assert.equal(f.config.accessToken, null);
+  const p = await purchase(f, 'live', buyerToken), c = p.response.body.case;
+  assert.equal(p.response.status, 200);
+  assert.equal(c.agreement.buyer, f.buyer.address);
+  assert.equal(c.payment.verified, true);
+  const privatePath = '/api/v1/orders/' + c.agreement.orderId;
+  await request(f.app).get(privatePath).set('Authorization', 'Bearer ' + otherToken).expect(404);
+  await request(f.app).get(p.path).set('Authorization', 'Bearer ' + otherToken).set(checkoutHeaders(p.context)).expect(404);
+  const signature = await f.buyer.signTypedData(recordTypedData('dispute', hashContent({ caseId: c.id, agreementHash: hashContent(c.agreement), deliveryHash: c.delivery.hash, decision })));
+  await request(f.app).post(privatePath + '/decision').set('Authorization', 'Bearer ' + otherToken).send({ decision, signature }).expect(404);
+  await request(f.app).post(privatePath + '/decision').set('Authorization', 'Bearer ' + buyerToken).send({ decision, signature }).expect(200);
+  await request(f.app).post('/api/v1/cases/' + c.id + '/process').set('Authorization', 'Bearer ' + otherToken).send({}).expect(404);
+  assert.equal(f.calls().processing, 0);
+  await request(f.app).post('/api/v1/cases/' + c.id + '/process').set('Authorization', 'Bearer ' + buyerToken).send({}).expect(200);
+  const replayed = await request(f.app).get(p.path).set('Authorization', 'Bearer ' + buyerToken).set(checkoutHeaders(p.context)).expect(200);
+  assert.equal(replayed.body.case.delivery.hash, c.delivery.hash);
+  assert.deepEqual(f.calls(), { generations: 1, settlements: 1, processing: 1 });
+  await request(f.app).get('/api/v1/cases/' + c.id + '/evidence').expect(200);
+});
+
+test('a public wallet session cannot release or generate work before its payment is confirmed', async () => {
+  const f = fixture({ public: true, pending: true }), buyerToken = await publicSession(f), p = await purchase(f, 'live', buyerToken);
+  assert.equal(p.response.status, 202);
+  assert.equal(p.response.body.case, null);
+  const saved = await request(f.app).get('/api/v1/orders/' + p.order.agreement.orderId).set('Authorization', 'Bearer ' + buyerToken).expect(200);
+  assert.equal(saved.body.order.delivery, null);
+  assert.equal(saved.body.order.payment, null);
+  assert.deepEqual(f.calls(), { generations: 0, settlements: 1, processing: 0 });
+});
+
+test('live custom-work receipts describe the requested service without a fictional launch-plan disclosure', async () => {
+  const f = fixture(), p = await purchase(f, 'live', token, 'agent-work-v1');
+  assert.equal(p.response.status, 200);
+  assert.equal(p.response.body.case.agreement.serviceId, 'agent-work-v1');
+  assert.equal(p.response.body.case.mode, 'live');
+  assert.doesNotMatch(p.response.body.case.provenance.disclosure, /fictional TraceLite/);
 });

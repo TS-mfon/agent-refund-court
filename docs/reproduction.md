@@ -1,117 +1,87 @@
-# Reproduce Agent Refund Court
+# Reproduce the testnet flow
 
-The public viewer displays cases without authentication. To create a case, run the buyer agent locally against an authorized deployment. Each purchase spends 0.01 Base Sepolia test USDC. Application hosting and durable storage use Vercel; source and automation use GitHub.
+The primary path for a new buyer is the [own-wallet quickstart](quickstart.md) with the [MCP server](mcp.md). It supports custom briefs and uses the buyer agent's existing model. No seller operator token is required.
 
-## Inspect first
+This guide covers the original launch-plan fixtures and the optional bundled demo CLI. Those scenarios provide controlled evidence for the same payment, review, court and refund flow.
 
-Open [the case viewer](https://agent-refund-court.vercel.app) or read:
+## Inspect before spending
 
 ```sh
 curl -fsS https://agent-refund-court.vercel.app/api/v1/service
 curl -fsS https://agent-refund-court.vercel.app/api/v1/cases
 ```
 
-The service advertises the seller, receipt signer, payment network, price, configured court address, and enabled capabilities. A configured capability is not evidence that a live transaction has completed.
+Confirm the exact seller, receipt signer, price, network, court and enabled capabilities. The [recorded proof](live-proof.md) establishes one completed real refund; discovery metadata alone does not prove a new transaction completed.
 
-The GenLayer QualityCourt deployment was finalized on StudioNet at:
+## Own-agent reproduction
 
-```text
-contract: 0xb37AFE3AEaed97e45c4715F85b036206CEC6EcE6
-deployment transaction: 0xb74289010dcc82b75db4215df5fb3d87b9a1df9e82e98b016dd1972c3cd12b6c
-```
+Configure your local buyer wallet, funded Base Sepolia USDC, mandate and MCP connection from the quickstart. Call `purchase_service` for a concise `agent-work-v1` brief. Read the full original brief, rubric and delivery with `get_evidence`, then submit one acceptance or evidence-based material dispute.
 
-This deployment proof is separate from payment, adjudication, and refund proofs. StudioNet availability and finality timing may change.
+Use a task appropriate to bounded text generation. A satisfactory live answer may be accepted; a refund is not the required outcome of every purchase. If disputed, GenLayer independently decides the case.
 
-## Prepare a fresh local buyer
+## Optional fixture CLI
 
-Use Node.js 24 or later:
+Use Node.js 24+ and the cloned checkout. The original CLI setup creates its own private role-wallet file and prints public addresses:
 
 ```sh
-git clone https://github.com/TS-mfon/agent-refund-court.git
-cd agent-refund-court
 npm ci
 node --import tsx tools/setup-demo.ts
 ```
 
-The setup command creates private role wallets in `~/.config/agent-refund-court/wallets.json` with owner-only file permissions. It prints addresses, not keys, and reuses an existing file. For a hosted demo run, only the buyer role is used locally. The deployment keeps its own seller, registrar, and receipt signer.
+The CLI uses the local buyer role. Against a hosted merchant, seller, registrar and receipt signer remain that deployment's own roles. Preserve the local private wallet/state file; it is separate from the recommended single-wallet MCP configuration.
 
-Fund the printed buyer address with at least 0.01 Base Sepolia USDC. Use test tokens only. The x402 facilitator submits the purchase authorization and pays its transaction gas; the buyer does not need to send an unlimited token approval.
+Fund the printed buyer address with the advertised Base Sepolia test-USDC principal. Configure the local buyer model through `GEMINI_API_KEY` and `MODEL_ID` or its private local model configuration. The default verified model is `gemini-3.1-flash-lite`.
 
-Load these values into your shell through a private secret manager or hidden terminal input:
+The demo CLI can authenticate through wallet sign-in. `DEMO_ACCESS_TOKEN` remains an optional operator override. `EXPECTED_SELLER` can pin the expected seller. Keep credentials out of command arguments and public files.
 
-| Variable | Required value |
-| --- | --- |
-| `DEMO_ACCESS_TOKEN` | Token provided privately by the deployment operator |
-| `GEMINI_API_KEY` | Your Google API credential for the local buyer model |
-| `MODEL_ID` | `gemini-3.1-flash-lite`, the live-verified default; any override must pass a real generation probe |
-| `EXPECTED_SELLER` | Optional seller pin, checked against the signed agreement |
-
-Credentials are never placed in CLI arguments, GitHub files, public manifests, or the frontend. A token grants access to the subsidized demo backend; it does not replace the buyer's agreement, checkout, or dispute signatures. If you do not have an operator token, use the public viewer or deploy your own instance following the [repository README](../README.md).
-
-## Choose one scenario
+For one explicitly authorized test purchase, choose one scenario:
 
 ```sh
 npm run demo -- --origin https://agent-refund-court.vercel.app --scenario bad
 ```
 
-| Scenario | Delivery | Integration exercised |
+| Scenario | Delivery | Real integrations |
 | --- | --- | --- |
-| `bad` | Explicitly selected generic answer fixture | Real purchase; real buyer evaluation; real court if disputed; real refund if awarded |
-| `good` | Explicitly selected useful answer fixture | Real purchase and buyer evaluation; an accepted answer needs no court or refund |
-| `live` | Seller generates the answer through Flash-Lite | Real seller generation plus the same purchase and dispute flow |
+| `bad` | Labelled generic fixture | Payment, buyer evaluation, court if disputed, refund if awarded |
+| `good` | Labelled useful fixture | Payment and buyer evaluation; an accepted answer needs no court |
+| `live` | Actual seller generation | Seller inference plus the same payment/review/dispute flow |
 
-The buyer's choice is independent; a scenario is not a forced outcome. The brief uses fictional TraceLite so no real product data is needed.
+Change `--scenario` for the desired single run. TraceLite is fictional. A fixture label is presentation provenance, not a court verdict instruction.
 
-Save the printed `orderId`, `caseId`, and viewer URL. The local buyer persists its original quote, checkout authorization, and evaluation under `~/.config/agent-refund-court/buyer-state`. Preserve those files.
+The CLI's model-driven fixture path is an optional demonstration tool. The reusable MCP client provides the standing-budget workflow for external agents.
 
-## Resume after a timeout
+## Resume the original order
 
-Run the original order with the same buyer wallet:
+Save the printed order/case IDs and viewer URL. After an uncertain CLI result:
 
 ```sh
 npm run demo -- --origin https://agent-refund-court.vercel.app --scenario bad --resume 0xYOUR_ORIGINAL_ORDER_ID
 ```
 
-Replace the placeholder with the 32-byte hexadecimal order identifier printed by the first run. The CLI reuses the original checkout; an uncertain payment is not replaced with a new authorization.
+Replace the placeholder with the original 32-byte order ID. Use the same wallet and local state. The original checkout is reused. An unknown financial outcome is not permission to create a second authorization.
 
-To progress an already disputed case:
+MCP buyers instead call `resume_purchase` with their original local purchase ID.
+
+## Follow an existing dispute
+
+The merchant advances existing disputes through its configured worker. A buyer session may call its own case's authenticated processing endpoint. An authorized operator can use:
 
 ```sh
 npm run worker -- --origin https://agent-refund-court.vercel.app --case 0xYOUR_CASE_ID --steps 120
 ```
 
-The worker command calls the authenticated processing endpoint. The server performs registration, checks its finality, submits adjudication, checks the ruling, and runs the seller refund worker when eligible. Polling is bounded. An exhausted polling budget leaves a case pending; it does not prove a failed or completed financial outcome.
+The operator worker needs its private operator token; it does not create purchases or let the client choose a ruling or refund destination. Bounded polling may end while the original case remains pending.
 
-## Inspect proof
+## Verify the outcome
 
-The viewer links payment and refund transactions on Base Sepolia and shows the GenLayer ruling and original evidence. Public routes:
+Acceptance completes useful work without a court ruling. A quality refund requires verified original payment, a verified final `REFUND` finding and a confirmed verified transfer of exact original principal to the original payer.
 
-```text
-GET /api/v1/cases
-GET /api/v1/cases/<caseId>
-GET /api/v1/cases/<caseId>/evidence
-```
+Inspect the original evidence and all chain links. The [proof tool](live-proof.md) independently checks the recorded refunded case using its original local buyer state and configured verification credentials. A public viewer is available without those private records.
 
-Require a verified original payment, finalized verified `REFUND` court proof, and confirmed verified refund matching the original payer, token, and amount before reporting a successful refund. The CLI's final JSON and the viewer must agree. An accepted case is successful without a refund; provisional and unresolved cases must remain labelled.
+Report actual status, provenance, viewer URL and available payment/court/refund hashes. A zero CLI exit or displayed award alone does not prove principal returned.
 
-## Local verification
+## Deploy independently
 
-```sh
-npm run test
-npm run typecheck
-npm run lint
-npm run build
-npm run test:coverage
-npm run test:e2e
-npm run contract:lint
-```
+Your seller needs its own Vercel project, private state, role keys, model access, funded refund reserve/gas and registrar-bound court. The original operator's private helpers target its dedicated project and are not generic provisioning scripts.
 
-Unit and integration tests use explicit doubles. The first real purchase, fresh-machine reproduction, and recorded video require separate live evidence. Consult [submission status](submission.md) for the evidence required before presenting the demo.
-
-## Operator responsibilities
-
-A deployment operator supplies a private demo token, Vercel Blob configuration, seller and receipt signer credentials, GenLayer registrar credentials, the deployed contract address, Base RPC/facilitator configuration, and seller model access. The seller needs USDC reserve plus Base Sepolia ETH for refund gas. Buyer keys stay local.
-
-The repository's `tools/private-config.ts`, `tools/configure-vercel.ts`, and `tools/run-private.ts` target the original operator's dedicated project and private directory. They are convenience tools for that operator, not generic provisioning scripts. A fresh operator must configure their own wallets, registrar-bound contract, Blob store, Vercel project, and environment variables from the README. Reusing the original contract with a different registrar will fail authorization.
-
-The public [agent skill](../skills/agent-refund-court/SKILL.md) gives the same execution and recovery procedure.
+[Seller guide](hosting.md) · [API](api.md) · [Trust model](trust-model.md) · [Agent skill](../skills/agent-refund-court/SKILL.md)

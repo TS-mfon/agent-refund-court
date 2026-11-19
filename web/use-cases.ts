@@ -65,9 +65,9 @@ export function useCases(selectedId: string | null, polling: boolean) {
 		};
 	}, [selectedId, polling, refreshKey]);
 	const current = selectedId
-		? selected?.id === selectedId
+		? selected?.id.toLowerCase() === selectedId.toLowerCase()
 			? selected
-			: (cases.find((c) => c.id === selectedId) ?? null)
+			: (cases.find((c) => c.id.toLowerCase() === selectedId.toLowerCase()) ?? null)
 		: (cases[0] ?? null);
 	return { cases, current, service, loading, error, checkedAt, refresh };
 }

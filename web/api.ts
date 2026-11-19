@@ -6,7 +6,7 @@ export type Fetcher = (
 	init?: RequestInit,
 ) => Promise<Response>;
 const ServiceSchema = z.object({
-	id: z.literal('launch-plan-v1'),
+	id: z.enum(['launch-plan-v1', 'agent-work-v1']),
 	priceBaseUnits: z.string().regex(/^[0-9]+$/),
 	symbol: z.literal('USDC'),
 	network: z.string(),

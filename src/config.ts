@@ -24,7 +24,7 @@ export function loadConfig(env:Record<string,string|undefined>=process.env) {
   accessToken,blobToken:env.BLOB_READ_WRITE_TOKEN??null,blobStoreId:env.BLOB_STORE_ID??null,
   model:z.enum(['gemini-2.5-flash-lite','gemini-3.1-flash-lite','gemini-3.5-flash-lite']).parse(env.MODEL_ID??LIGHTWEIGHT_MODEL_ID),
   geminiApiKey:env.GEMINI_API_KEY??null,
-  canWrite:!!(seller&&receiptKey&&courtAddress&&accessToken&&(env.BLOB_READ_WRITE_TOKEN||env.BLOB_STORE_ID)),
+  canWrite:!!(seller&&receiptKey&&courtAddress&&(env.BLOB_READ_WRITE_TOKEN||env.BLOB_STORE_ID)),
  };
 }
 export type AppConfig=ReturnType<typeof loadConfig>;

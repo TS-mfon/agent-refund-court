@@ -13,12 +13,17 @@ export function demoOrigin(input: string): string {
     throw new DemoHttpError('INVALID_SERVICE_ORIGIN');
   return url.origin;
 }
-export async function apiRequest(origin: string, accessToken: string, path: string, init?: RequestInit, fetcher: typeof fetch = fetch): Promise<Response> {
+export async function responseJSON(response: Response, maxBytes = 65536): Promise<unknown> {
+  const text = await response.text();
+  if (Buffer.byteLength(text) > maxBytes) throw new DemoHttpError('RESPONSE_TOO_LARGE');
+  try { return JSON.parse(text) as unknown; } catch { throw new DemoHttpError('INVALID_API_JSON'); }
+}
+async function sendRequest(origin: string, accessToken: string | null, path: string, init?: RequestInit, fetcher: typeof fetch = fetch): Promise<Response> {
   const base = demoOrigin(origin);
-  if (!path.startsWith('/api/v1/') || path.includes('..') || !accessToken || accessToken.length > 512) throw new DemoHttpError('INVALID_REQUEST');
-  const headers = new Headers(init?.headers); headers.set('Authorization', 'Bearer ' + accessToken); headers.set('Accept', 'application/json');
+  if (!path.startsWith('/api/v1/') || path.includes('..') || accessToken !== null && (!accessToken || accessToken.length > 512)) throw new DemoHttpError('INVALID_REQUEST');
+  const headers = new Headers(init?.headers); if (accessToken) headers.set('Authorization', 'Bearer ' + accessToken); headers.set('Accept', 'application/json');
   if (init?.body) headers.set('Content-Type', 'application/json');
-  const response = await fetcher(base + path, { ...init, headers, signal: init?.signal ?? AbortSignal.timeout(55000) });
+  const response = await fetcher(base + path, { ...init, redirect: 'error', headers, signal: init?.signal ?? AbortSignal.timeout(55000) });
   if (!response.ok && response.status !== 402) {
     let serverErrorCode: unknown;
     try {
@@ -32,9 +37,16 @@ export async function apiRequest(origin: string, accessToken: string, path: stri
   }
   return response;
 }
+export function apiRequest(origin: string, accessToken: string, path: string, init?: RequestInit, fetcher: typeof fetch = fetch) {
+  return sendRequest(origin, accessToken, path, init, fetcher);
+}
+export function publicApiRequest(origin: string, path: string, init?: RequestInit, fetcher: typeof fetch = fetch) {
+  if (new Headers(init?.headers).has('Authorization')) throw new DemoHttpError('INVALID_PUBLIC_REQUEST');
+  return sendRequest(origin, null, path, init, fetcher);
+}
 export async function apiJSON<T>(origin: string, token: string, path: string, schema: z.ZodType<T>, data?: unknown, fetcher?: typeof fetch): Promise<T> {
   const response = await apiRequest(origin, token, path, data === undefined ? undefined : { method: 'POST', body: JSON.stringify(data) }, fetcher);
-  return schema.parse(await response.json());
+  return schema.parse(await responseJSON(response));
 }
 export function cliArguments(args: string[]) {
   let result: Record<string, string> = {};

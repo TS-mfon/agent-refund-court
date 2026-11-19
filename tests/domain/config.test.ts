@@ -17,3 +17,12 @@ test('origins, model and remote RPCs are constrained at startup',()=>{
   assert.throws(()=>loadConfig({BASE_RPC_URL:'file:///etc/passwd'}));
   assert.equal(loadConfig({SERVICE_ORIGIN:'https://example.com/'}).origin,'https://example.com');
 });
+
+test('public wallet purchases do not depend on an optional operator access token', () => {
+  const seller = privateKeyToAccount(secret).address;
+  const config = loadConfig({ SELLER_ADDRESS: seller, SELLER_PRIVATE_KEY: secret,
+    RECEIPT_SIGNER_PRIVATE_KEY: secret, GENLAYER_REGISTRAR_PRIVATE_KEY: secret,
+    GENLAYER_CONTRACT: '0x' + '22'.repeat(20), BLOB_READ_WRITE_TOKEN: 'unit-test-store' });
+  assert.equal(config.accessToken, null);
+  assert.equal(config.canWrite, true);
+});
