@@ -158,3 +158,44 @@ test('a returned refund receipt cannot substitute its destination, amount, or fi
     await assert.rejects(f.processor(f.c.id),/REFUND_PROOF_BINDING_MISMATCH/);
   }
 });
+
+test('refund diagnostics expose the validated worker code and distinguish a later failure stage', async t => {
+  const errors = t.mock.method(console, 'error', () => {});
+  let code = 'CHAIN_UNAVAILABLE';
+  const f = await fixture(async (id, load) => {
+    const context = await load(id);
+    return { status: 'CHAIN_RECONCILIATION_REQUIRED', state: {
+      paymentId: id, bindingHash: h('c'), reason: 'quality', authorizer: context.payment.seller,
+      status: 'CHAIN_RECONCILIATION_REQUIRED', authorization: null, transactionHashes: [], proof: null, errorCode: code,
+    } };
+  });
+  let c = f.c;
+  for (let i = 0; i < 5; i += 1) c = await f.processor(f.c.id);
+  assert.ok(c.events.some(event => event.id === 'refund-CHAIN_RECONCILIATION_REQUIRED-CHAIN_UNAVAILABLE'
+    && event.label === 'Refund: CHAIN_RECONCILIATION_REQUIRED: CHAIN_UNAVAILABLE'));
+  assert.deepEqual(JSON.parse(errors.mock.calls[0].arguments[0] as string), {
+    event: 'refund_worker_attention', caseId: f.c.id, status: 'CHAIN_RECONCILIATION_REQUIRED', code: 'CHAIN_UNAVAILABLE',
+  });
+  code = 'REFUND_STATE_WRITE_FAILED';
+  c = await f.processor(f.c.id);
+  assert.ok(c.events.some(event => event.label === 'Refund: CHAIN_RECONCILIATION_REQUIRED: REFUND_STATE_WRITE_FAILED'));
+  assert.equal(c.refund?.verified, false);
+});
+
+test('refund diagnostic events and logs reject arbitrary SDK text and unknown uppercase codes', async t => {
+  const errors = t.mock.method(console, 'error', () => {});
+  for (const errorCode of ['SDK error signature=PRIVATE_VALUE', 'PRIVATE_SECRET_TOKEN']) {
+    const f = await fixture(async (id, load) => {
+      const context = await load(id);
+      return { status: 'CHAIN_RECONCILIATION_REQUIRED', state: {
+        paymentId: id, bindingHash: h('c'), reason: 'quality', authorizer: context.payment.seller,
+        status: 'CHAIN_RECONCILIATION_REQUIRED', authorization: null, transactionHashes: [], proof: null, errorCode,
+      } };
+    });
+    let c = f.c;
+    for (let i = 0; i < 5; i += 1) c = await f.processor(f.c.id);
+    assert.ok(c.events.some(event => event.label === 'Refund: CHAIN_RECONCILIATION_REQUIRED: REFUND_DIAGNOSTIC_UNAVAILABLE'));
+    assert.equal(JSON.stringify(c.events).includes('PRIVATE'), false);
+  }
+  assert.equal(JSON.stringify(errors.mock.calls.map(call => call.arguments)).includes('PRIVATE'), false);
+});

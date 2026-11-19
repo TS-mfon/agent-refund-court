@@ -11,6 +11,19 @@ import type { RefundContext, RefundWorkerResult } from '../refunds/types.js';
 export class WorkflowError extends Error {
   constructor(readonly code: string) { super(code); this.name = 'WorkflowError'; }
 }
+const RefundWorkerErrorCodeSchema = z.enum([
+  'REFUND_STORE_UNAVAILABLE', 'STORED_BINDING_MISMATCH', 'STORED_AUTHORIZATION_INVALID',
+  'INVALID_EXISTING_REFUND_PROOF', 'CHAIN_UNAVAILABLE', 'REFUND_STATE_WRITE_FAILED',
+  'REFUND_STORE_FENCE_LOST', 'REFUND_STATE_READ_FAILED', 'REFUND_SIGNER_UNAVAILABLE',
+  'ELIGIBILITY_RECHECK_UNAVAILABLE', 'WRONG_CHAIN', 'INVALID_CHAIN_OBSERVATION',
+  'USDC_DOMAIN_MISMATCH', 'CONFIRMED_PROOF_NO_LONGER_CANONICAL', 'TX_REVERTED',
+  'INSUFFICIENT_USDC', 'INSUFFICIENT_GAS', 'ELIGIBILITY_BINDING_CHANGED',
+  'MISSING_DURABLE_AUTHORIZATION', 'AUTHORIZATION_EXPIRED', 'AUTHORIZATION_NOT_YET_VALID',
+  'BROADCAST_OUTCOME_UNKNOWN', 'INVALID_BALANCE_OBSERVATION', 'CONFLICTING_AUTHORIZATION_HISTORY',
+  'AUTHORIZATION_STATE_CONFLICT', 'AUTHORIZATION_CANCELED', 'WAITING_CONFIRMATIONS',
+  'CONSUMED_WITHOUT_VERIFIED_TRANSFER', 'SUCCESSFUL_RECEIPT_WITHOUT_REFUND_PROOF',
+  'WAITING_HEAD', 'WAITING_RECEIPT',
+]);
 const JobSchema = z.object({
   schemaVersion: z.literal(1), caseId: HashSchema, evidenceHash: HashSchema,
   phase: z.enum(['new', 'registering', 'registration_sent', 'registered', 'adjudicating', 'adjudication_sent', 'terminal']),
@@ -113,6 +126,10 @@ export function createCaseProcessor(options: CaseProcessorOptions) {
       state.proof.authorizationNonce !== refundIdentity(id, p.seller) ||
       state.proof.transactionHash && !state.transactionHashes.includes(state.proof.transactionHash)))
       throw new WorkflowError('REFUND_PROOF_BINDING_MISMATCH');
+    const diagnostic = state.errorCode === null ? null : RefundWorkerErrorCodeSchema.safeParse(state.errorCode);
+    const errorCode = diagnostic === null ? null : diagnostic.success ? diagnostic.data : 'REFUND_DIAGNOSTIC_UNAVAILABLE';
+    if (errorCode && !['REFUND_CONFIRMED', 'CONFIRMING', 'BROADCAST'].includes(state.status))
+      console.error(JSON.stringify({ event: 'refund_worker_attention', caseId: id, status: state.status, code: errorCode }));
     const proof = state.proof ?? { reason: 'quality' as const, status: state.status === 'RESERVE_SHORTFALL' ? 'reserve_shortfall' as const :
       state.status === 'AUTHORIZATION_CANCELED' ? 'canceled' as const :
       ['TX_FAILED', 'GAS_SHORTFALL', 'CHAIN_RECONCILIATION_REQUIRED'].includes(state.status) ? 'failed' as const : 'pending' as const,
@@ -120,7 +137,9 @@ export function createCaseProcessor(options: CaseProcessorOptions) {
       authorizationNonce: refundIdentity(id, c.payment.seller), transactionHash: state.transactionHashes.at(-1) ?? null,
       blockNumber: null, blockHash: null, verified: false };
     return update(id, evidence, { refund: proof, status: proof.verified && proof.status === 'confirmed' ? 'refunded' : 'refund_pending' },
-      { id: 'refund-' + state.status, label: state.status === 'REFUND_CONFIRMED' ? 'Original paid principal returned; transfer confirmed.' : 'Refund: ' + state.status });
+      { id: 'refund-' + state.status + (errorCode ? '-' + errorCode : ''),
+        label: state.status === 'REFUND_CONFIRMED' ? 'Original paid principal returned; transfer confirmed.'
+          : 'Refund: ' + state.status + (errorCode ? ': ' + errorCode : '') });
   }
   return async function processCase(inputId: string): Promise<CaseManifest> {
     const id = HashSchema.parse(inputId), c = (await loadCase(id)).value;

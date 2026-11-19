@@ -88,28 +88,18 @@ export interface RefundReconciliation {
 function unique(hashes: readonly Hex[]): readonly Hex[] {
   return [...new Map(hashes.map(hash => [hash.toLowerCase(), hash])).values()];
 }
-export async function reconcileRefund(input: {
+type ReconciliationInput = {
   readonly eligibility: EligibleRefund; readonly policy: RefundPolicy; readonly chain: RefundChain;
   readonly observation: RefundObservation; readonly transactionHashes: readonly Hex[];
-}): Promise<RefundReconciliation> {
-  const { eligibility: e, policy, chain, observation: o } = input;
-  if (!validPrincipal(e) || o.chainId !== BASE_CHAIN_ID) throw new Error('INVALID_REFUND_RECONCILIATION');
-  const [consumed, history] = await Promise.all([
-    chain.authorizationState(e.from, e.nonce, o.headBlockNumber),
-    chain.authorizationHistory(e.from, e.nonce, 0n, o.headBlockNumber),
-  ]);
-  const historyHashes = history.flatMap(log => {
-    const event = eq(log.address, USDC_ADDRESS) && !log.removed ? decode(log) : null;
-    if (!log.transactionHash || (!relevant(event, e, 'used') && !relevant(event, e, 'canceled'))) return [];
-    return [HashSchema.parse(log.transactionHash)];
-  });
-  const transactionHashes = unique([...input.transactionHashes.map(hash => HashSchema.parse(hash)), ...historyHashes]);
-  const entries = await Promise.all(transactionHashes.map(async transactionHash => {
-    const receipt = await chain.receipt(transactionHash);
-    const block = receipt?.status === 'success' && receipt.blockNumber <= o.headBlockNumber
-      ? await chain.block(receipt.blockNumber) : null;
-    return { transactionHash, receipt, block };
-  }));
+};
+type ReceiptEntry = {
+  readonly transactionHash: Hex; readonly receipt: RefundReceipt | null;
+  readonly block: Awaited<ReturnType<RefundChain['block']>> | null;
+};
+function reconcileReceipts(input: Omit<ReconciliationInput, 'chain'> & {
+  readonly consumed: boolean; readonly entries: readonly ReceiptEntry[];
+}): RefundReconciliation {
+  const { eligibility: e, policy, observation: o, consumed, entries, transactionHashes } = input;
   const revertedTransactionHashes = entries.filter(entry => entry.receipt?.status === 'reverted').map(entry => entry.transactionHash);
   const outcome = (status: RefundReconciliation['status'], errorCode: string | null = null, proof: RefundProof | null = null): RefundReconciliation =>
     ({ status, errorCode, proof, transactionHashes, revertedTransactionHashes });
@@ -142,4 +132,36 @@ export async function reconcileRefund(input: {
   if (entries.some(entry => entry.receipt?.status === 'success' && entry.receipt.blockNumber > o.headBlockNumber)) return outcome('CONFIRMING', 'WAITING_HEAD');
   if (entries.some(entry => entry.receipt === null)) return outcome('BROADCAST', 'WAITING_RECEIPT');
   return outcome('UNUSED', revertedTransactionHashes.length > 0 ? 'TX_REVERTED' : null);
+}
+export async function reconcileRefund(input: ReconciliationInput): Promise<RefundReconciliation> {
+  const { eligibility: e, chain, observation: o } = input;
+  if (!validPrincipal(e) || o.chainId !== BASE_CHAIN_ID) throw new Error('INVALID_REFUND_RECONCILIATION');
+  const consumed = await chain.authorizationState(e.from, e.nonce, o.headBlockNumber);
+  const knownHashes = unique(input.transactionHashes.map(hash => HashSchema.parse(hash)));
+  async function inspect(hashes: readonly Hex[]): Promise<readonly ReceiptEntry[]> {
+    return Promise.all(hashes.map(async transactionHash => {
+      const receipt = await chain.receipt(transactionHash);
+      const block = receipt?.status === 'success' && receipt.blockNumber <= o.headBlockNumber
+        ? await chain.block(receipt.blockNumber) : null;
+      return { transactionHash, receipt, block };
+    }));
+  }
+  const knownEntries = await inspect(knownHashes);
+  const known = reconcileReceipts({ ...input, consumed, entries: knownEntries, transactionHashes: knownHashes });
+  // USDC's fixed nonce cannot execute twice. Inspect every supplied receipt first:
+  // unused state conflicts with a canonical action, rather than authorizing a resend.
+  if (!consumed || ['REFUND_CONFIRMED', 'AUTHORIZATION_CANCELED', 'CONFIRMING'].includes(known.status)
+    || known.errorCode === 'CONFLICTING_AUTHORIZATION_HISTORY') return known;
+  // An unknown consumed nonce needs bounded history for crash recovery. A scan
+  // beyond the adapter's limit remains unresolved until a transaction hash is supplied.
+  const history = await chain.authorizationHistory(e.from, e.nonce, 0n, o.headBlockNumber);
+  const historyHashes = history.flatMap(log => {
+    const event = eq(log.address, USDC_ADDRESS) && !log.removed ? decode(log) : null;
+    if (!log.transactionHash || (!relevant(event, e, 'used') && !relevant(event, e, 'canceled'))) return [];
+    return [HashSchema.parse(log.transactionHash)];
+  });
+  const transactionHashes = unique([...knownHashes, ...historyHashes]);
+  const knownSet = new Set(knownHashes.map(hash => hash.toLowerCase()));
+  const recoveredEntries = await inspect(transactionHashes.filter(hash => !knownSet.has(hash.toLowerCase())));
+  return reconcileReceipts({ ...input, consumed, entries: [...knownEntries, ...recoveredEntries], transactionHashes });
 }
