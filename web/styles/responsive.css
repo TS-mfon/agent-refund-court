@@ -1,0 +1,420 @@
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@media (min-width: 1600px) {
+	.site-header,
+	.site-main,
+	.site-footer {
+		width: 1320px;
+	}
+	.intro {
+		padding-block: 65px 55px;
+	}
+}
+@media (max-width: 1100px) {
+	.site-header,
+	.site-main,
+	.site-footer {
+		width: calc(100% - 48px);
+	}
+	.intro {
+		gap: 25px;
+		grid-template-columns: 1.2fr 1fr;
+	}
+	.intro-partners {
+		padding-left: 22px;
+	}
+	.brand-logos {
+		gap: 8px;
+	}
+	.brand-logos img {
+		max-height: 27px;
+	}
+	.logo-court {
+		max-width: 119px;
+	}
+	.logo-genlayer {
+		max-width: 93px;
+	}
+	.logo-x402 {
+		max-width: 45px;
+	}
+	.case-workspace {
+		grid-template-columns: 180px minmax(0, 1fr);
+	}
+	.case-detail {
+		padding: 23px;
+	}
+	.case-list {
+		padding: 22px 10px;
+	}
+	.case-heading {
+		align-items: flex-start;
+	}
+	.case-heading h2 {
+		font-size: 22px;
+	}
+	.outcome {
+		padding: 22px;
+		gap: 20px;
+	}
+	.outcome h3 {
+		font-size: 25px;
+	}
+	.principal strong {
+		font-size: 30px;
+	}
+	.evidence-columns {
+		gap: 25px;
+		grid-template-columns: minmax(0, 1fr) minmax(235px, 0.9fr);
+	}
+	.status-pill {
+		font-size: 9px;
+	}
+	.reproduce {
+		gap: 35px;
+	}
+}
+@media (max-width: 860px) {
+	.site-header {
+		min-height: 80px;
+	}
+	.site-header nav {
+		gap: 18px;
+	}
+	.site-header nav a {
+		font-size: 12px;
+	}
+	.app-identity {
+		font-size: 15px;
+		gap: 8px;
+	}
+	.app-identity .court-mark {
+		width: 32px;
+		height: 32px;
+	}
+	.intro {
+		grid-template-columns: 1fr;
+		padding-block: 34px;
+		gap: 25px;
+	}
+	.intro-copy {
+		max-width: 650px;
+	}
+	.intro-partners {
+		padding: 0;
+		border: 0;
+	}
+	.intro-partners > p {
+		display: none;
+	}
+	.testnet-badge {
+		margin-top: 13px;
+	}
+	.brand-logos img {
+		max-height: 30px;
+	}
+	.brand-logos {
+		gap: 13px;
+	}
+	.logo-court {
+		max-width: 140px;
+	}
+	.logo-genlayer {
+		max-width: 116px;
+	}
+	.logo-x402 {
+		max-width: 62px;
+	}
+	.case-workspace {
+		grid-template-columns: 1fr;
+	}
+	.case-list {
+		display: flex;
+		gap: 10px;
+		border-right: 0;
+		border-bottom: 1px solid var(--line);
+		overflow-x: auto;
+		padding: 14px 20px;
+	}
+	.list-title {
+		display: none;
+	}
+	.case-option {
+		min-width: 165px;
+		max-width: 210px;
+		flex-shrink: 0;
+		margin: 0;
+		padding: 12px;
+	}
+	.service-summary {
+		display: none;
+	}
+	.case-option small {
+		font-size: 9px;
+	}
+	.case-detail {
+		padding: 25px;
+	}
+	.evidence-columns {
+		grid-template-columns: 1.1fr 1fr;
+	}
+	.reproduce {
+		grid-template-columns: 1fr;
+		gap: 24px;
+		margin-top: 30px;
+	}
+	.reproduce h2 {
+		font-size: 24px;
+	}
+	.run-instructions {
+		max-width: 650px;
+	}
+}
+@media (max-width: 600px) {
+	.site-header,
+	.site-main,
+	.site-footer {
+		width: calc(100% - 32px);
+	}
+	.site-header {
+		align-items: flex-start;
+		flex-direction: column;
+		justify-content: center;
+		gap: 17px;
+		padding-block: 20px;
+	}
+	.site-header nav {
+		gap: 23px;
+	}
+	.intro {
+		padding-block: 30px;
+	}
+	.intro-copy h1 {
+		font-size: 37px;
+		letter-spacing: -1.5px;
+	}
+	.intro-copy > p {
+		font-size: 14px;
+		margin-top: 17px;
+	}
+	.viewer {
+		border-radius: 10px;
+	}
+	.viewer-toolbar {
+		padding: 18px 17px;
+		align-items: flex-start;
+	}
+	.viewer-toolbar h2 {
+		font-size: 17px;
+	}
+	.viewer-toolbar p {
+		font-size: 10px;
+		max-width: 180px;
+	}
+	.viewer-controls {
+		gap: 10px;
+		flex-direction: column;
+		align-items: flex-end;
+	}
+	.polling-label {
+		font-size: 10px;
+	}
+	.viewer-controls .button {
+		min-height: 32px;
+		font-size: 11px;
+		padding: 7px 12px;
+	}
+	.case-detail {
+		padding: 20px 17px;
+	}
+	.case-heading {
+		gap: 12px;
+		margin-bottom: 18px;
+		flex-direction: column;
+	}
+	.case-heading h2 {
+		font-size: 22px;
+	}
+	.outcome {
+		align-items: flex-start;
+		padding: 20px;
+		gap: 18px;
+		flex-direction: column;
+	}
+	.outcome h3 {
+		font-size: 27px;
+	}
+	.outcome h3 + p {
+		font-size: 12px;
+	}
+	.principal {
+		border-left: 0;
+		border-top: 1px solid #cfdaec;
+		padding: 15px 0 0;
+		flex-direction: row;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 10px;
+		text-align: left;
+		width: 100%;
+		justify-content: space-between;
+	}
+	.principal > span:first-child {
+		width: 100%;
+		font-size: 10px;
+	}
+	.principal strong {
+		font-size: 32px;
+	}
+	.principal > span:last-child {
+		max-width: 100px;
+		line-height: 1.5;
+		text-align: right;
+	}
+	.case-stages {
+		gap: 7px;
+		padding-block: 20px;
+		grid-template-columns: 1fr;
+		list-style: none;
+	}
+	.stage {
+		flex-direction: row;
+		gap: 10px;
+		align-items: flex-start;
+		padding-bottom: 11px;
+	}
+	.stage:after {
+		height: auto;
+		width: 1px;
+		left: 13px;
+		top: 31px;
+		bottom: 2px;
+		right: auto;
+	}
+	.stage-symbol {
+		flex-shrink: 0;
+	}
+	.stage > div {
+		padding-top: 2px;
+	}
+	.stage > div > span {
+		font-size: 10px;
+		margin-top: 3px;
+	}
+	.stage strong {
+		font-size: 12px;
+	}
+	.stage:last-child {
+		padding-bottom: 0;
+	}
+	.evidence-columns {
+		grid-template-columns: 1fr;
+		padding-top: 5px;
+		gap: 14px;
+	}
+	.document-section {
+		padding-block: 18px;
+	}
+	.ruling-box {
+		padding: 20px;
+	}
+	.ruling-box h3 {
+		font-size: 15px;
+	}
+	.ruling-box p {
+		font-size: 13px;
+	}
+	.receipts {
+		padding-block: 23px;
+	}
+	.receipt-row {
+		font-size: 12px;
+	}
+	.receipt-row > a {
+		font-size: 12px;
+	}
+	.receipt-row > span:last-child {
+		font-size: 11px;
+	}
+	.activity li p {
+		font-size: 12px;
+	}
+	.case-footer {
+		font-size: 10px;
+	}
+	.site-footer {
+		flex-direction: column;
+		gap: 12px;
+	}
+	.reproduce {
+		padding-block: 25px;
+	}
+	.run-instructions {
+		padding: 20px;
+	}
+	.command {
+		gap: 8px;
+	}
+	.command code {
+		font-size: 10px;
+	}
+	.empty-case {
+		padding: 36px 23px;
+	}
+	.empty-case h3 {
+		font-size: 22px;
+	}
+	.service-error {
+		margin: 17px;
+		padding: 17px;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	html {
+		scroll-behavior: auto;
+	}
+	*,
+	*:before,
+	*:after {
+		animation: none !important;
+		transition: none !important;
+	}
+}
+
+.brand-logos a:last-child {
+	padding: 6px 8px;
+	background: var(--blue);
+	border-radius: 4px;
+}
+
+@media (max-width: 600px) {
+	.brand-logos {
+		gap: 7px;
+	}
+	.logo-court {
+		max-width: 118px;
+	}
+	.logo-genlayer {
+		max-width: 92px;
+	}
+	.logo-x402 {
+		max-width: 45px;
+	}
+}
+@media (max-width: 380px) {
+	.brand-logos {
+		gap: 6px;
+	}
+	.logo-court {
+		max-width: 105px;
+	}
+	.logo-genlayer {
+		max-width: 83px;
+	}
+	.logo-x402 {
+		max-width: 40px;
+	}
+}

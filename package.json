@@ -1,0 +1,61 @@
+{
+  "name": "agent-refund-court",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --use-env-proxy --import tsx tools/dev.ts",
+    "dev:web": "node --import tsx tools/dev.ts --web",
+    "build": "node tools/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint src web api tools tests",
+    "test": "node tools/test.mjs",
+    "test:coverage": "c8 --all --src src --include 'src/**/*.ts' --exclude 'tests/**' --check-coverage --lines 80 --branches 80 --functions 80 --statements 80 node tools/test.mjs",
+    "test:integration": "node tools/test.mjs tests/integration",
+    "test:e2e": "playwright test",
+    "contract:lint": "python3 tools/check-contract.py",
+    "demo": "node --use-env-proxy --import tsx tools/demo.ts",
+    "worker": "node --use-env-proxy --import tsx tools/process-cases.ts",
+    "proof:verify": "node --use-env-proxy --import tsx tools/verify-proof.ts",
+    "live:verify": "node --use-env-proxy --import tsx tools/run-private.ts check",
+    "model:verify": "node --use-env-proxy --import tsx tools/run-private.ts model"
+  },
+  "dependencies": {
+    "@vercel/blob": "2.9.0",
+    "@x402/core": "2.31.0",
+    "@x402/evm": "2.31.0",
+    "@x402/express": "2.31.0",
+    "express": "5.3.0",
+    "genlayer-js": "1.1.8",
+    "react": "19.3.1",
+    "react-dom": "19.3.1",
+    "viem": "2.58.0",
+    "zod": "4.6.7"
+  },
+  "overrides": {
+    "@vercel/oidc": {
+      "@vercel/cli-config": "0.3.6"
+    },
+    "test-exclude": {
+      "glob": "14.0.6",
+      "minimatch": "11.0.9"
+    }
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.6.8",
+    "@playwright/test": "1.65.1",
+    "@types/express": "5.0.6",
+    "@types/node": "26.6.6",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "@types/supertest": "7.2.1",
+    "c8": "12.0.0",
+    "esbuild": "0.28.2",
+    "supertest": "7.3.2",
+    "tsx": "4.23.15",
+    "typescript": "6.0.3"
+  }
+}

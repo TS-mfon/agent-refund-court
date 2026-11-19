@@ -1,0 +1,81 @@
+.reproduce {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 70px;
+	align-items: start;
+	margin-top: 55px;
+	padding: 32px 0;
+}
+.reproduce h2 {
+	font-size: 27px;
+}
+.reproduce p {
+	font-size: 14px;
+	color: var(--muted);
+	margin-top: 15px;
+}
+.reproduce a {
+	display: inline-block;
+	font-size: 13px;
+	margin-top: 16px;
+}
+.run-instructions {
+	padding: 20px 24px;
+	background: #f4f7fe;
+	border-radius: 10px;
+}
+.run-instructions p {
+	font-size: 12px;
+	margin-top: 12px;
+}
+.run-instructions p:first-child {
+	margin-top: 0;
+	color: var(--ink);
+}
+.command {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	padding: 15px 0;
+	border-bottom: 1px solid #d9e2f4;
+}
+.command code {
+	font-family: "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+	font-size: 11px;
+	overflow-wrap: anywhere;
+}
+.copy-button {
+	background: #fff;
+	border: 1px solid #d1dcf0;
+	color: var(--blue);
+	font-size: 11px;
+	border-radius: 4px;
+	padding: 7px 9px;
+}
+.trust-note {
+	padding: 26px 0 40px;
+	margin-top: 16px;
+	border-top: 1px solid var(--line);
+}
+.trust-note h2 {
+	font-size: 18px;
+}
+.trust-note p {
+	font-size: 12px;
+	color: var(--muted);
+	max-width: 100ch;
+	margin-top: 10px;
+}
+.site-footer {
+	display: flex;
+	justify-content: space-between;
+	gap: 18px;
+	font-size: 11px;
+	color: var(--muted);
+	border-top: 1px solid var(--line);
+	padding-block: 24px 32px;
+}
+.site-footer a {
+	font-size: 11px;
+}
