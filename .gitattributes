@@ -1,0 +1,2 @@
+# Preserve byte-for-byte upstream skill snapshots, including their terminal newlines.
+skills/agent-refund-court/upstream/** whitespace=-blank-at-eof

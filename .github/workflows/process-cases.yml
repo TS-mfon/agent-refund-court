@@ -1,0 +1,26 @@
+name: Advance existing court cases
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '*/5 * * * *'
+permissions:
+  contents: read
+concurrency:
+  group: existing-court-cases
+  cancel-in-progress: false
+jobs:
+  process:
+    if: github.repository == 'TS-mfon/agent-refund-court'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '26'
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: npm run worker -- --origin https://agent-refund-court.vercel.app
+        env:
+          DEMO_ACCESS_TOKEN: ${{ secrets.DEMO_ACCESS_TOKEN }}
+          SERVICE_ORIGIN: https://agent-refund-court.vercel.app

@@ -1,0 +1,18 @@
+{
+  "network": "studionet",
+  "chainId": 61999,
+  "rpc": "https://studio.genlayer.com/api",
+  "contractAddress": "0x4eaf1BAc12573BDeA26a0c437D1f2ED4914600Ed",
+  "transactionHash": "0x631642b2b0680b934a67c1f73fcdef8d482ed08678feed3839d97731f78e5521",
+  "registrar": "0xF3662F79ea1b2f5a6D175bf20b3ca1F8A410F27e",
+  "rubricVersion": "launch-plan-v1",
+  "runner": "py-genlayer:1jb45aa8ynh2a9c9xn3b7qqh8sm5q93hwfp7jqmwsfhh8jpz09h6",
+  "sourceHash": "0x88e591f6bb22475984f7f41900a12550bfbd383c56d6a8b6fb6068bf1bcf50d4",
+  "status": "finalized",
+  "verified": true,
+  "supportedServices": [
+    "launch-plan-v1",
+    "agent-work-v1"
+  ],
+  "previousDeployment": "deployments/launch-plan-v1.json"
+}

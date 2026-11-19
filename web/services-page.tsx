@@ -1,0 +1,29 @@
+import { useEffect, useState } from 'react';
+import { fetchCatalog, type CatalogService } from './catalog.js';
+import { Arrow, CopyButton, Loading, PageHeading } from './components.js';
+import { formatMoney } from './model.js';
+import { buildAgentTask, serviceOrigin, utf8Length } from './protocol-model.js';
+import { Link } from './router.js';
+const briefExamples=[
+ {label:'Implementation plan',text:'Create a practical implementation plan for a small web app that tracks a freelance project’s tasks and deadlines. Include the core screens, a simple data model, and a one-week delivery sequence for one developer. Explain any assumptions.'},
+ {label:'Product review',text:'Review this product idea: a local-first tool that turns HTTP request logs into a searchable timeline. Identify three useful user workflows, the main adoption obstacle, and a practical way to test demand without advertising. Keep claims grounded in the described features.'},
+ {label:'Launch plan',text:'TraceLite is a local HTTP log timeline for backend developers. Give three practical launch actions and a feedback method within five hours and no advertising budget. Use only features described here and include realistic time allocations.'},
+];
+function ServiceCard({service,selected,onSelect}:{service:CatalogService;selected:boolean;onSelect:()=>void}) {
+ return <button type="button" className={'service-card '+(selected?'selected':'')} aria-pressed={selected} onClick={onSelect}><div className="service-card-top"><span className="service-symbol" aria-hidden="true">{service.id==='agent-work-v1'?'✧':'↗'}</span><span className="service-select-indicator" aria-hidden="true">{selected?'✓':'+'}</span></div><h2>{service.title}</h2><p>{service.description}</p><div className="service-price"><strong>{formatMoney(service.priceBaseUnits)} <small>{service.symbol}</small></strong><span>{service.network==='eip155:84532'?'Base Sepolia':service.network}</span></div><span className="service-availability">{service.capabilities?service.capabilities.purchase?'Agent purchases enabled':'Purchases currently unavailable':'Availability checked by your agent'}</span></button>;
+}
+export function ServicesPage(){
+ const [services,setServices]=useState<CatalogService[]>([]),[selectedId,setSelectedId]=useState('agent-work-v1'),[brief,setBrief]=useState(''),[loading,setLoading]=useState(true),[error,setError]=useState<string|null>(null),[retry,setRetry]=useState(0);
+ useEffect(()=>{const controller=new AbortController();setLoading(true);fetchCatalog(controller.signal).then(value=>{setServices(value);setError(null);}).catch(issue=>{if(!controller.signal.aborted)setError(issue instanceof Error?issue.message:'The service catalog could not be read.');}).finally(()=>{if(!controller.signal.aborted)setLoading(false);});return()=>controller.abort();},[retry]);
+ const selected=services.find(value=>value.id===selectedId)??services[0],bytes=utf8Length(brief),valid=Boolean(selected&&brief.trim()&&bytes<=1200);
+ let task='';if(valid&&selected)task=buildAgentTask(serviceOrigin(),selected.id,brief);
+ return <div className="page services-page"><PageHeading title="Give your agent a clear job.">Choose a service, write the brief, and let your agent handle the purchase and review.</PageHeading>
+  {loading?<Loading label="Reading available services…"/>:null}{error?<div className="service-error" role="alert"><h2>The catalog could not be read.</h2><p>{error}</p><button className="button secondary" onClick={()=>setRetry(value=>value+1)}>Retry catalog</button></div>:null}
+  <div className="service-grid">{services.map(service=><ServiceCard key={service.id} service={service} selected={selected?.id===service.id} onSelect={()=>setSelectedId(service.id)}/>)}</div>
+  {!loading&&!error&&!services.length?<p className="empty-filter">No service is currently published. Check again before making a purchase.</p>:null}
+  <section className="brief-builder" aria-labelledby="brief-title"><div className="builder-intro"><span className="builder-icon" aria-hidden="true">✎</span><h2 id="brief-title">Your brief is the agreement.</h2><p>Describe the deliverable, useful context and concrete constraints. The court uses the agreed brief and rubric if the work is disputed.</p><div className="brief-examples"><span>Start from an example</span>{briefExamples.map(example=><button type="button" key={example.label} onClick={()=>setBrief(example.text)}>{example.label}<Arrow/></button>)}</div><Link href="/docs/services">What makes a good brief<Arrow/></Link></div>
+  <div className="builder-form"><label htmlFor="brief">What should the seller deliver?</label><textarea id="brief" rows={7} placeholder="Create a practical plan for…" value={brief} onChange={event=>setBrief(event.target.value)} aria-describedby="brief-limit" aria-invalid={bytes>1200}/><div className="brief-meta"><span id="brief-limit" className={bytes>1200?'limit-error':''}>{bytes.toLocaleString()} / 1,200 bytes</span><span>Plain text work</span></div>{bytes>1200?<p className="limit-error" role="alert">Shorten the brief to at most 1,200 bytes.</p>:null}
+  <div className="builder-actions"><CopyButton value={task} disabled={!valid} label="Copy task for your agent"/><Link href="/connect">Connect an agent<Arrow/></Link></div><p className="builder-hint">Your agent reads the live price and rubric, then buys within your configured merchant allowlist and spending limits. Wallet signing stays on your machine.</p>{task?<details className="task-preview"><summary>Preview agent task</summary><pre>{task}</pre></details>:null}</div></section>
+  <div className="service-footnote"><h3>A promise you can inspect.</h3><p>Payment, delivery and buyer review create a published case. Accepted work stays accepted; a quality dispute goes to independent judgment on GenLayer.</p><Link href="/cases">Explore published cases<Arrow/></Link></div>
+ </div>;
+}

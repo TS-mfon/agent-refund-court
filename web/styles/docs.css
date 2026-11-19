@@ -1,0 +1,50 @@
+.docs-layout {display:grid;grid-template-columns:220px minmax(0,1fr) 180px;gap:50px;padding:40px 0 75px;align-items:start;}
+.docs-sidebar {position:sticky;top:30px;max-height:calc(100vh - 60px);overflow-y:auto;scrollbar-width:thin;}
+.docs-brand {font-size:12px;color:var(--ink);font-weight:600;display:block;margin:0 0 20px;}
+.docs-search {width:100%;min-height:40px;padding:0 10px;border-radius:9px;gap:7px;}
+.docs-search input {font-size:11px;height:40px;}
+.docs-search .icon {width:14px;height:14px;}
+.doc-search-count {font-size:10px;color:var(--muted);margin-top:14px;}
+.doc-nav-group {margin-top:26px;}
+.doc-nav-group h2 {font-family:inherit;font-size:11px;color:var(--muted);font-weight:600;margin-bottom:11px;}
+.doc-nav-group>a {display:block;color:var(--muted);font-size:12px;padding:8px 12px;border-radius:8px;margin-bottom:2px;line-height:1.45;}
+.doc-nav-group>a[aria-current="page"] {color:var(--blue);background:var(--soft-blue);font-weight:550;}
+.doc-nav-group>a:hover {color:var(--blue);}
+.no-doc-results {font-size:12px;color:var(--muted);margin-top:22px;}
+.docs-source {display:flex;gap:7px;align-items:center;font-size:10px;color:var(--muted);margin-top:30px;padding-top:20px;border-top:1px solid var(--line);}
+.docs-source .icon {width:13px;height:13px;}
+.docs-reading {min-width:0;max-width:780px;}
+.doc-article>header {border-bottom:1px solid var(--line);padding-bottom:29px;margin-bottom:33px;}
+.doc-category {font-size:11px;color:var(--blue);display:block;margin-bottom:13px;}
+.doc-article h1 {font-size:43px;line-height:1.2;letter-spacing:-1.7px;}
+.doc-article>header>p {color:var(--muted);font-size:15px;line-height:1.75;margin-top:18px;}
+.doc-section {margin-bottom:35px;scroll-margin-top:35px;}
+.doc-section h2 {font-size:25px;letter-spacing:-.9px;line-height:1.25;margin:0 0 17px;}
+.doc-section h2>a {color:var(--ink);}
+.doc-section h2>a>span {color:var(--muted);font-size:15px;margin-left:10px;opacity:0;transition:opacity 150ms ease;}
+.doc-section h2>a:hover>span,.doc-section h2>a:focus-visible>span {opacity:1;}
+.doc-section p,.doc-section li {font-size:14px;line-height:1.85;color:var(--muted);}
+.doc-section p {margin:0 0 15px;}
+.doc-section ul {padding-left:20px;margin:16px 0;}
+.doc-section li {padding:4px 0 4px 3px;}
+.doc-section strong {color:var(--ink);font-weight:600;}
+.doc-section a:not(.doc-links a) {color:var(--blue);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:3px;}
+.doc-section h2>a {text-decoration:none!important;}
+.doc-section p code,.doc-section li code {padding:2px 5px;font-size:11px;background:var(--pale);border:1px solid var(--line);border-radius:4px;color:var(--ink);overflow-wrap:anywhere;}
+.doc-code {position:relative;background:var(--pale);border:1px solid var(--line);border-radius:13px;margin:22px 0;}
+.doc-code>.copy-control {display:flex;align-items:end;padding:10px 10px 0;}
+.doc-code .button {font-size:10px;min-height:29px;border-radius:7px;padding:6px 9px;}
+.doc-code pre {max-width:100%;overflow:auto;padding:16px 20px 20px;margin:0;font-size:11px;line-height:1.8;font-family:"Ubuntu Sans Mono","Cascadia Code",Consolas,monospace;color:var(--ink);}
+.doc-links {display:flex;flex-wrap:wrap;gap:12px 20px;margin-top:23px;}
+.doc-links a {display:inline-flex;align-items:center;gap:7px;font-size:12px;}
+.doc-links .icon {width:14px;height:14px;}
+.docs-toc {position:sticky;top:35px;border-left:1px solid var(--line);padding-left:20px;}
+.docs-toc>span {display:block;font-size:11px;font-weight:600;color:var(--ink);margin-bottom:15px;}
+.docs-toc>a {display:block;font-size:11px;color:var(--muted);padding:6px 0;line-height:1.5;}
+.docs-toc>a:hover {color:var(--blue);}
+.doc-pagination {border-top:1px solid var(--line);padding-top:24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:40px;}
+.doc-pagination>a {border:1px solid var(--line);padding:17px 20px;border-radius:12px;color:var(--ink);position:relative;}
+.doc-pagination>a>span {display:block;font-size:10px;color:var(--muted);margin-bottom:7px;}
+.doc-pagination strong {font-size:12px;font-weight:600;padding-right:25px;}
+.doc-pagination .icon {position:absolute;right:14px;bottom:17px;width:16px;height:16px;color:var(--blue);}
+.docs-menu-toggle {display:none;}

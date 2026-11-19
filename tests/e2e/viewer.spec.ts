@@ -1,0 +1,121 @@
+import { test, expect, type Page } from '@playwright/test';
+import { sampleCase, refundedCase, hash } from '../ui/sample.js';
+import type { CaseManifest } from '../../src/domain/schema.js';
+async function api(page:Page,cases:CaseManifest[],options:{broken?:boolean}={}){
+ await page.route('**/api/v1/**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  const service={id:'agent-work-v1',priceBaseUnits:'10000',symbol:'USDC',network:'eip155:84532',courtNetwork:'studionet',repository:'https://github.com/TS-mfon/agent-refund-court',capabilities:{purchase:true,generation:true}};
+  if(path==='/api/v1/service')return route.fulfill({json:{service}});
+  if(path==='/api/v1/services')return route.fulfill({json:{services:[{...service,title:'Custom agent work',description:'A bounded digital text deliverable.'},{...service,id:'launch-plan-v1',title:'First-week launch plan',description:'A practical plan within five hours.'}]}});
+  if(path==='/api/v1/health')return route.fulfill({json:{status:'ok',success:true}});
+  if(path==='/api/v1/activity/status')return route.fulfill({json:{status:'idle',pendingCases:0}});
+  if(path==='/api/v1/activity/wake')return route.fulfill({status:202,json:{queued:true}});
+  if(options.broken)return route.fulfill({status:503,json:{error:'service unavailable'}});
+  if(path==='/api/v1/cases')return route.fulfill({json:{cases}});
+  if(path.endsWith('/evidence'))return route.fulfill({json:{evidence:{disclosure:'Explicit E2E test fixture; no real chain operations.',delivery:cases[0]?.delivery}}});
+  const c=cases.find(value=>path==='/api/v1/cases/'+value.id);
+  return route.fulfill({status:c?200:404,json:c?{case:c}:{error:'not found'}});
+ });
+}
+test('landing empty state has no invented case, receipt, or verdict',async({page})=>{
+ await api(page,[]);await page.goto('/');
+ await expect(page.getByRole('heading',{name:'No case has been published yet.'})).toBeVisible();
+ await expect(page.getByRole('link',{name:'Run with an agent',exact:true})).toBeVisible();
+ await expect(page.locator('a[href*="basescan.org/tx/"]')).toHaveCount(0);
+ await expect(page.getByAltText('Internet Court')).toBeVisible();
+ await expect(page.getByAltText('GenLayer')).toBeVisible();
+ await expect(page.getByAltText('x402')).toBeVisible();
+});
+test('case detail exposes verified receipts, escaped delivery and sealed evidence',async({page},testInfo)=>{
+ const c=refundedCase();await api(page,[c]);await page.goto('/cases/'+c.id);
+ await expect(page.getByRole('heading',{name:'The buyer got its money back.'})).toBeVisible();
+ await expect(page.getByText('<script>alert("evidence")</script> Promote it online.',{exact:true})).toBeVisible();
+ await expect(page.locator('a[href="https://sepolia.basescan.org/tx/'+hash('3')+'"]')).toBeVisible();
+ await expect(page.locator('a[href="https://sepolia.basescan.org/tx/'+hash('9')+'"]')).toBeVisible();
+ await page.getByRole('button',{name:'Inspect sealed evidence'}).click();
+ await expect(page.locator('#evidence-json')).toContainText('Explicit E2E test fixture');
+ await page.getByRole('button',{name:'Hide sealed evidence'}).click();
+ await expect(page.locator('#evidence-json')).toHaveCount(0);
+ await page.getByRole('checkbox',{name:'Auto-refresh'}).uncheck();
+ await expect(page.getByRole('checkbox',{name:'Auto-refresh'})).not.toBeChecked();
+ await page.screenshot({path:testInfo.outputPath('case-desktop.png'),fullPage:true});
+});
+test('case cards support status and search filters, navigation and legacy links',async({page})=>{
+ const first=refundedCase(),second=sampleCase({id:hash('d'),status:'accepted',delivery:{text:'Second rehearsal answer.',hash:hash('e'),committedAt:1795000000}});
+ await api(page,[first,second]);await page.goto('/cases');
+ await expect(page.locator('.case-card')).toHaveCount(2);
+ await page.getByRole('combobox',{name:'Filter cases by status'}).selectOption('accepted');
+ await expect(page.locator('.case-card')).toHaveCount(1);
+ await page.locator('.case-card').click();
+ await expect(page).toHaveURL('/cases/'+hash('d'));
+ await expect(page.getByText('Second rehearsal answer.',{exact:true})).toBeVisible();
+ await page.getByRole('link',{name:'← All cases'}).click();
+ await page.getByRole('searchbox',{name:'Search cases'}).fill('unknown project');
+ await expect(page.getByRole('heading',{name:'No case matches those filters.'})).toBeVisible();
+ await page.getByRole('button',{name:'Clear filters'}).click();
+ await expect(page.locator('.case-card')).toHaveCount(2);
+ await page.goto('/?case='+first.id);
+ await expect(page).toHaveURL('/cases/'+first.id);
+ await expect(page.getByRole('heading',{name:'The buyer got its money back.'})).toBeVisible();
+});
+test('service failures remain retryable and never imply an outcome',async({page})=>{
+ await api(page,[],{broken:true});await page.goto('/cases');
+ await expect(page.getByRole('alert')).toContainText('503');
+ await expect(page.getByRole('button',{name:'Retry',exact:true})).toBeVisible();
+ await expect(page.getByRole('heading',{name:'The buyer got its money back.'})).toHaveCount(0);
+});
+test('service composer validates byte limits and produces an agent task',async({page})=>{
+ await api(page,[]);await page.goto('/services');
+ await expect(page.getByRole('button',{name:/Custom agent work/})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Copy task for your agent'})).toBeDisabled();
+ await page.getByRole('button',{name:'Implementation plan',exact:true}).click();
+ await expect(page.getByRole('button',{name:'Copy task for your agent'})).toBeEnabled();
+ await page.getByText('Preview agent task',{exact:true}).click();
+ await expect(page.locator('.task-preview pre')).toContainText('Service: agent-work-v1');
+ await expect(page.locator('.task-preview pre')).toContainText('Keep wallet signing local');
+ await page.getByRole('textbox',{name:'What should the seller deliver?'}).fill('é'.repeat(601));
+ await expect(page.getByRole('alert')).toContainText('1,200 bytes');
+ await expect(page.getByRole('button',{name:'Copy task for your agent'})).toBeDisabled();
+});
+test('documentation search and local MCP configuration work without secret inputs',async({page})=>{
+ await api(page,[]);await page.goto('/docs/getting-started');
+ await expect(page.locator('.doc-article h1')).toBeVisible();
+ await page.getByRole('searchbox',{name:'Search documentation'}).fill('zzzz-no-article');
+ await expect(page.getByText('No articles match. Try “payment”, “wallet” or “refund”.')).toBeVisible();
+ await page.getByRole('searchbox',{name:'Search documentation'}).fill('payment');
+ await expect(page.locator('.doc-nav-group a').first()).toBeVisible();
+ await page.getByRole('link',{name:'Connect agent',exact:true}).click();
+ await page.getByRole('button',{name:'MCP tools',exact:true}).click();
+ await expect(page.locator('.code-panel pre').first()).toContainText('ARC_BUYER_WALLET_FILE');
+ await page.getByRole('button',{name:'Codex TOML'}).click();
+ await expect(page.locator('.code-panel pre').first()).toContainText('[mcp_servers.agent-refund-court]');
+ await expect(page.locator('input[type="password"]')).toHaveCount(0);
+});
+test('protocol explorer supports direct interaction, reduced motion and night mode',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});await api(page,[]);await page.goto('/');
+ await expect(page.locator('.commerce-flow')).toHaveAttribute('data-reduced-motion','true');
+ await expect(page.getByRole('button',{name:'Play'})).toBeDisabled();
+ await page.getByRole('button',{name:'3 Ruling'}).click();
+ await expect(page.getByRole('heading',{name:'Let the court decide'})).toBeVisible();
+ await page.getByRole('button',{name:'1 Trade'}).click();
+ await expect(page.getByRole('heading',{name:'Agree on the work'})).toBeVisible();
+ await page.getByRole('button',{name:'Switch to night mode'}).click();
+ await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+ await page.reload();await expect(page.locator('html')).toHaveAttribute('data-theme','dark');
+});
+test('mobile navigation and case evidence fit the viewport',async({page},testInfo)=>{
+ await page.setViewportSize({width:390,height:844});const c=refundedCase();await api(page,[c]);await page.goto('/');
+ await expect(page.getByRole('heading',{name:'Good work. Fair outcomes.'})).toBeVisible();
+ await expect(page.getByRole('button',{name:'Open navigation'})).toBeVisible();
+ await page.getByRole('button',{name:'Open navigation'}).click();
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Cases',exact:true}).click();
+ await expect(page).toHaveURL('/cases');await page.locator('.case-card').click();
+ await expect(page.getByRole('heading',{name:'The buyer got its money back.'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+ await expect(page.getByRole('button',{name:'Refresh',exact:true})).toBeVisible();
+ await page.screenshot({path:testInfo.outputPath('case-mobile.png'),fullPage:true});
+ await page.goto('/services');await expect(page.getByRole('textbox',{name:'What should the seller deliver?'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+ await page.goto('/docs/quickstart');await page.getByRole('button',{name:'Browse documentation'}).click();await expect(page.getByRole('searchbox',{name:'Search documentation'})).toBeVisible();
+ expect(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth)).toBe(false);
+});

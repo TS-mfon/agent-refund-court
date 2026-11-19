@@ -1,0 +1,11 @@
+import { z } from 'zod';
+import { getAddress, type Address, type Hex } from 'viem';
+export const BASE_CHAIN_ID = 84532;
+export const BASE_NETWORK = 'eip155:84532' as const;
+export const USDC_ADDRESS = '0x036CbD53842c5426634e7929541eC2318f3dCF7e' as const;
+export const HashSchema = z.string().regex(/^0x[0-9a-fA-F]{64}$/).transform(v => v as Hex);
+export const SignatureSchema = z.string().regex(/^0x[0-9a-fA-F]{130}$/).transform(v => v as Hex);
+export const AddressSchema = z.string().regex(/^0x[0-9a-fA-F]{40}$/).transform(v => getAddress(v) as Address);
+export const AmountSchema = z.string().regex(/^(0|[1-9][0-9]*)$/).refine(v => BigInt(v) > 0n, 'Positive integer token amount required');
+export const bounded = (max: number) => z.string().min(1).refine(v => new TextEncoder().encode(v).length <= max, 'Text exceeds byte limit');
+export const CriterionIdSchema = z.enum(['relevance', 'actionability', 'grounding']);

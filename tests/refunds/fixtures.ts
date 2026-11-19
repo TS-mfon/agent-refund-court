@@ -1,0 +1,12 @@
+import { paymentIdentity } from '../../src/domain/identity.js';
+import { BASE_CHAIN_ID, BASE_NETWORK, USDC_ADDRESS, type PaymentProof } from '../../src/domain/schema.js';
+import type { RefundContext } from '../../src/refunds/types.js';
+const h = (n: number) => ('0x' + n.toString(16).padStart(64, '0')) as `0x${string}`;
+const payer = '0x1111111111111111111111111111111111111111';
+const seller = '0x2222222222222222222222222222222222222222';
+const contract = '0x3333333333333333333333333333333333333333';
+export const policy = { authorizer: seller, courtNetwork: 'testnet-bradbury' as const, courtContractAddress: contract, confirmations: 2, authorizationLifetimeSeconds: 600, minimumGasBalanceWei: '100', usdcDomain: { name: 'USDC', version: '2' } };
+const payment = { chainId: BASE_CHAIN_ID, network: BASE_NETWORK, token: USDC_ADDRESS, payer, seller, amount: '10000', authorizationNonce: h(1), transactionHash: h(2), blockNumber: '50', blockHash: h(3), verified: true } satisfies PaymentProof;
+const paymentId = paymentIdentity({ chainId: BASE_CHAIN_ID, token: USDC_ADDRESS, payer, nonce: h(1) });
+export const context = { paymentId, reservationPaymentId: paymentId, payment, agreementHash: h(4), deliveryHash: h(5), evidenceHash: h(6), court: { network: 'testnet-bradbury' as const, contractAddress: contract, caseId: paymentId, evidenceHash: h(6), transactionHash: h(7), status: 'finalized' as const, result: { decision: 'REFUND' as const, materialFailure: true, reasoning: 'The committed answer contains no practical actions.', failedCriteria: ['actionability' as const] }, verified: true }, rulingBinding: { finalized: true, paymentId, caseId: paymentId, agreementHash: h(4), deliveryHash: h(5), evidenceHash: h(6), transactionHash: h(7) }, operationalApproval: null, alreadyConfirmedRefund: null } satisfies RefundContext;
+export { h, seller, payer };
